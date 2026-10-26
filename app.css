@@ -119,8 +119,14 @@ html.icons .ms{visibility:visible}
 /* 하단 */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 .bar .wrap{display:flex;flex:1}
-.bar a,.bar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 7px;font-size:11.5px;color:var(--ink2)}
-.bar .ms{font-size:24px}
+.bar a,.bar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0 6px;font-size:11px;color:var(--ink2)}
+.bar .ms{font-size:22px}
+.bar .arr{flex:0 0 64px;justify-content:center;color:var(--ink);border-left:1px solid var(--line)}
+.bar .arr:first-child{border-left:0;border-right:1px solid var(--line)}
+.bar .arr .ms{font-size:26px}
+.bar .arr.pri{background:var(--ink);color:var(--bg)}
+.bar .arr:disabled{opacity:.25}
+.bar.nav a,.bar.nav button:not(.arr){padding:9px 0 5px}
 
 /* 시트 */
 .sheet{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.35);display:flex;align-items:flex-end}
@@ -199,23 +205,19 @@ html.icons .ms{visibility:visible}
 .rmore p{margin:8px 0 0;line-height:1.6}
 .racts{display:flex;flex-wrap:wrap;gap:0 18px;margin-top:16px;padding-top:10px;border-top:1px solid var(--line);font-size:14px}
 .racts a,.racts button{display:inline-flex;align-items:center;gap:4px;padding:6px 0;color:var(--ink2)}
-.rn{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:19;display:flex;gap:10px;background:var(--bg);border-top:1px solid var(--line);padding:10px max(20px,env(safe-area-inset-right,0px)) 10px max(20px,env(safe-area-inset-left,0px))}
-.rn button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line2);padding:13px;font-size:16px;font-weight:600}
-.rn button.pri{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:2}
-.rn button:disabled{opacity:.3}
-body.cards{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+body.cards{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .bigsay{font-size:30px;font-weight:700;line-height:1.35;margin:10px 0 6px;letter-spacing:-.01em}
 .cta.ms{font-size:inherit}
 
 /* 카드 모드: 왼쪽 세로 타임라인 + 오른쪽 카드 */
 .rw{display:grid;grid-template-columns:68px 1fr;gap:0 10px;align-items:start}
-.rail{position:sticky;top:calc(108px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:stretch;padding:14px 0 0;max-height:calc(100vh - 260px);overflow:hidden}
+.rail{position:sticky;top:calc(108px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:stretch;padding:14px 0 0 4px}
 .rail .rd{display:grid;grid-template-columns:12px 1fr;gap:6px;align-items:center;padding:0;min-height:18px}
 .rail .rd b{width:10px;height:10px;border:1.5px solid var(--ink3);border-radius:50%;background:var(--bg);justify-self:center;display:block}
 .rail .rd span{font-size:11px;line-height:1.1;color:var(--ink3);word-break:keep-all}
 .rail .rd.past b{border-color:var(--ink2);background:var(--ink2)}
 .rail .rd.past span{color:var(--ink2)}
-.rail .rd.now b{width:14px;height:14px;border:2px solid var(--ink);background:var(--ink);box-shadow:0 0 0 3px var(--bg),0 0 0 4px var(--ink)}
+.rail .rd.now b{width:12px;height:12px;border:2px solid var(--ink);background:var(--ink);box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--ink)}
 .rail .rd.now span{color:var(--ink);font-weight:700;font-size:12px}
 .rail .seg{display:block;width:0;flex:1 1 auto;min-height:14px;margin:2px 0 2px 5px;border-left:1px dashed var(--line2)}
 .rail .seg.past{border-left:1px solid var(--ink2)}
@@ -227,3 +229,16 @@ body.cards{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
 .rc{padding:0}
 .rh{padding-top:10px}
 @media (min-width:480px){.rw{grid-template-columns:80px 1fr}.rail .rd span{font-size:12px}}
+
+/* 세로 스크롤 카드 */
+:root{--hdr:150px}
+.rw{grid-template-columns:68px 1fr}
+.col{min-width:0}
+.ctx{position:sticky;top:calc(var(--hdr) + env(safe-area-inset-top,0px) - 42px);z-index:5;background:var(--bg);padding:10px 0 8px;border-bottom:1px solid var(--line)}
+.ctx .pgc{margin-left:auto;color:var(--ink3);font-size:12.5px}
+.rc{padding:18px 0 22px;border-bottom:1px solid var(--line)}
+.rc.isplace{padding-top:22px}
+.rc .pl{display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:700;color:var(--ink);border:1px solid var(--ink);padding:2px 8px 2px 4px;margin-bottom:10px}
+.rh{padding-top:0}
+.end{text-align:center;color:var(--ink3);font-size:13px;padding:24px 0 10px}
+.rail{top:calc(var(--hdr) + env(safe-area-inset-top,0px) - 34px)}

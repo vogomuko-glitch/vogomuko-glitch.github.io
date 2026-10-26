@@ -52,7 +52,7 @@ async function openTrip(meta){
 
 /* ---------- 시작 화면 ---------- */
 function renderHome(){
-  TRIP=null; document.body.classList.remove('cards'); document.title='여행';
+  TRIP=null; document.body.classList.remove('cards'); window.onscroll=null; document.title='여행';
   $('#top').innerHTML=`<div class="top-row"><h1>여행</h1></div>`;
   $('#bar').hidden=true;
   $('#main').innerHTML=`<section class="home">
@@ -92,7 +92,7 @@ function renderTrip(){
     <div class="kv">${ms('view_carousel')}<div><b>리허설</b><p>한 장에 한 동작. 집에서 넘겨보며 장면을 외우는 용도. 사진이 이상하면 카드 번호를 알려줘.</p></div></div>
     <div class="kv">${ms('view_list')}<div><b>전체 보기</b><p>하루 전체 시간표. ${ms('verified','s')} 공식 시간표 · ${ms('schedule','s')} 내가 정한 시간 · ${ms('help','s')} 예상, 현장에서 확인</p></div></div>`);
   const day=TRIP.days.find(d=>d.id===cur);
-  document.body.classList.remove('cards');
+  document.body.classList.remove('cards'); window.onscroll=null;
   if(mode==='cards'&&day.steps&&day.steps.length){ renderCards(day); return; }
   const nv=day.items.filter(i=>i.st==='v'||i.st==='est').length, np=day.items.filter(i=>i.k==='p').length;
   let h=`<div class="dh"><h2>${esc(day.title)}</h2><div class="city">${esc(day.city)}</div>
@@ -155,66 +155,69 @@ function calcRows(){
   return '<table>'+TRIP.returnCalc.steps.map(s=>{t-=s[1];return `<tr><td>${esc(s[0])}</td><td class="num">${f(t)}</td></tr>`;}).join('')+'</table>';
 }
 
-/* ---------- 리허설 카드 ---------- */
+/* ---------- 리허설: 세로로 쭉, 왼쪽 점이 스크롤 따라 움직임 ---------- */
 let stepIdx=LS.get('trip.step',{});
-function renderCards(day){
-  const n=day.steps.length; let i=Math.min(stepIdx[TRIP.id+':'+day.id]||0,n-1); if(i<0)i=0;
-  const s=day.steps[i]; const [tn,ti]=TYPE[s.type]||TYPE.do;
-  const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
+function cardHTML(day,s,k){
+  const [tn,ti]=TYPE[s.type]||TYPE.do; const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
   let view;
   if(CAN_EMBED){
     const src=s.v?svurl(s.v.lat,s.v.lng,s.v.h||0):mapurl(s.q||s.a);
-    view=`<div class="cv"><div class="ph">${s.v?'로드뷰':'지도'} 불러오는 중</div><iframe title="장면" data-src="${src}" loading="eager" referrerpolicy="no-referrer-when-downgrade"></iframe>${s.v&&s.v.cap?`<span class="cap">${esc(s.v.cap)}</span>`:''}${!s.v?`<span class="cap">지도 · ${esc(s.q||'')}</span>`:''}</div>`;
+    view=`<div class="cv"><div class="ph">${s.v?'로드뷰':'지도'}</div><iframe title="장면" data-src="${src}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${s.v?esc(s.v.cap||''):'지도 · '+esc(s.q||'')}</span></div>`;
   } else view=`<div class="cv flat"><a class="big" target="_blank" rel="noopener" href="${s.v?pano(s.v.lat,s.v.lng):gmap(s.q||s.a)}">${ms(s.v?'streetview':'map')} ${s.v?'로드뷰 열기':'지도 열기'}</a></div>`;
   const meta=[s.t?`<b class="num">${esc(s.t)}</b>`:'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join('<i>·</i>');
-  // 왼쪽 세로 타임라인: 장소(see/arrive/do)만 점으로. 지금 장소 = 채운 점, 이동 중 = 두 점 사이 굵은 선
-  const isPlace=st=>!!st.place;
-  const anchors=day.steps.map((st,k)=>isPlace(st)?k:-1).filter(k=>k>=0);
-  let at=-1; anchors.forEach((k,ai)=>{ if(k<=i) at=ai; });            // 지나온 마지막 장소
-  const atPlace=at>=0&&anchors[at]===i;                               // 지금 장소에 있음
-  const moving=!atPlace;                                              // 장소 사이 이동/준비 중
-  const nextA=at+1<anchors.length?anchors[at+1]:null;
-  const shortName=st=>st.place||st.a.slice(0,5);
-  const rail=`<aside class="rail" aria-label="오늘 장소">${anchors.map((k,ai)=>{
-    const st=day.steps[k]; const cls=ai===at&&atPlace?'now':(ai<=at?'past':'');
-    const seg=ai<anchors.length-1?`<i class="seg ${moving&&ai===at?'live':''} ${ai<at?'past':''}"></i>`:'';
-    return `<button class="rd ${cls}" data-k="${k}"><b></b><span>${esc(shortName(st))}</span></button>${seg}`; }).join('')}</aside>`;
-  const ctx=atPlace?`${ms('location_on','s')}지금 ${at+1}/${anchors.length} · <b>${esc(shortName(day.steps[anchors[at]]))}</b>`
-    :(nextA!=null?`${ms('directions_walk','s')}이동 중 → <b>${esc(shortName(day.steps[nextA]))}</b>${at>=0?` <span class="dim">(${esc(shortName(day.steps[anchors[at]]))}에서)</span>`:''}`:`${ms('flag','s')}오늘 마지막`);
-  document.body.classList.add('cards');
-  $('#main').innerHTML=`<div class="rw">${rail}<section class="rc">
-    <div class="ctx">${ctx}</div>
-    <div class="rh"><span class="ty">${ms(ti)}${tn}</span><span class="rm">${meta}</span><span class="pg num">${i+1} / ${n}</span></div>
+  return `<section class="rc ${s.place?'isplace':''}" id="s${k}" data-k="${k}">
+    ${s.place?`<div class="pl">${ms('location_on','s')}${esc(s.place)}</div>`:''}
+    <div class="rh"><span class="ty">${ms(ti)}${tn}</span><span class="rm">${meta}</span><span class="pg num">${k+1}</span></div>
     ${view}
     <h2 class="ra">${esc(s.a)}</h2>
     ${s.b?`<p class="rb">${ms('visibility','s')}${esc(s.b)}</p>`:''}
-    ${sayItem?`<button class="say" id="saySheet">${ms('translate','s')}보여줄 말: <b>${esc(sayItem[1])}</b></button>`:''}
+    ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}보여줄 말: <b>${esc(sayItem[1])}</b></button>`:''}
     ${s.more?`<details class="rmore"><summary>자세히</summary><p>${esc(s.more)}</p></details>`:''}
     <div class="racts">
       <a target="_blank" rel="noopener" href="${s.v?gmap(s.v.lat+','+s.v.lng):gmap(s.q||s.a)}">${ms('map','s')}지도</a>
       ${s.v?`<a target="_blank" rel="noopener" href="${pano(s.v.lat,s.v.lng)}">${ms('streetview','s')}로드뷰 크게</a>`:''}
-      <button id="lost">${ms('sos','s')}길 잃음</button>
+      <button class="lost" data-k="${k}">${ms('sos','s')}길 잃음</button>
     </div>
-  </section></div>
-  <nav class="rn"><button id="prev" ${i===0?'disabled':''}>${ms('arrow_back')}이전</button><button id="next" class="pri" ${i===n-1?'disabled':''}>다음${ms('arrow_forward')}</button></nav>`;
-  const go=d=>{stepIdx[TRIP.id+':'+day.id]=Math.max(0,Math.min(n-1,i+d));LS.set('trip.step',stepIdx);renderCards(day);window.scrollTo(0,0);};
-  $('#prev').onclick=()=>go(-1); $('#next').onclick=()=>go(1);
-  document.querySelectorAll('.rail .rd').forEach(b=>b.onclick=()=>go(+b.dataset.k-i));
-  if(sayItem) $('#saySheet').onclick=()=>openSheet(`<h3>이거 보여줘</h3><p class="lead">${esc(sayItem[0])}</p><div class="bigsay">${esc(sayItem[1])}</div><p class="ro" style="color:var(--accent);font-size:16px">${esc(sayItem[2])}</p>`);
-  $('#lost').onclick=()=>openSheet(`<h3>길 잃었을 때</h3><p class="lead">당황하지 말고 둘 중 하나.</p>
+  </section>`;
+}
+function renderCards(day){
+  const steps=day.steps, n=steps.length;
+  const anchors=steps.map((st,k)=>st.place?k:-1).filter(k=>k>=0);
+  const rail=`<aside class="rail" aria-label="오늘 장소">${anchors.map((k,ai)=>`<button class="rd" data-k="${k}"><b></b><span>${esc(steps[k].place)}</span></button>${ai<anchors.length-1?`<i class="seg" data-ai="${ai}"></i>`:''}`).join('')}</aside>`;
+  document.body.classList.add('cards');
+  $('#main').innerHTML=`<div class="rw">${rail}<div class="col"><div class="ctx" id="ctx"></div>${steps.map((s,k)=>cardHTML(day,s,k)).join('')}<p class="end">오늘 끝 · ${n}장</p></div></div>`;
+  renderBar();
+  // 지금 위치 표시
+  const setNow=k=>{
+    let at=-1; anchors.forEach((ak,ai)=>{ if(ak<=k) at=ai; });
+    const atPlace=at>=0&&anchors[at]===k; const nextA=at+1<anchors.length?anchors[at+1]:null;
+    document.querySelectorAll('.rail .rd').forEach((b,ai)=>{ b.classList.toggle('now',ai===at&&atPlace); b.classList.toggle('past',ai<at||(ai===at&&!atPlace)); });
+    document.querySelectorAll('.rail .seg').forEach((sg,ai)=>{ sg.classList.toggle('live',!atPlace&&ai===at); sg.classList.toggle('past',ai<at); });
+    $('#ctx').innerHTML=atPlace?`${ms('location_on','s')}지금 ${at+1}/${anchors.length} · <b>${esc(steps[anchors[at]].place)}</b><span class="pgc num">${k+1} / ${n}</span>`
+      :(nextA!=null?`${ms('directions_walk','s')}이동 중 → <b>${esc(steps[nextA].place)}</b>${at>=0?` <span class="dim">(${esc(steps[anchors[at]].place)}에서)</span>`:''}<span class="pgc num">${k+1} / ${n}</span>`:`${ms('flag','s')}오늘 마지막<span class="pgc num">${k+1} / ${n}</span>`);
+    stepIdx[TRIP.id+':'+day.id]=k; LS.set('trip.step',stepIdx);
+  };
+  const cards=[...document.querySelectorAll('.rc')];
+  const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ const f=e.target.querySelector('iframe[data-src]'); if(f){f.src=f.dataset.src;f.removeAttribute('data-src');} } }); },{rootMargin:'600px 0px'});
+  cards.forEach(c=>io.observe(c));
+  const pick=()=>{ const line=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdr'))||150)+40; let best=cards[0];
+    for(const c of cards){ if(c.getBoundingClientRect().top<=line) best=c; else break; } setNow(+best.dataset.k); };
+  let raf=0; window.onscroll=()=>{ if(!raf) raf=requestAnimationFrame(()=>{raf=0;pick();}); };
+  document.querySelectorAll('.rail .rd').forEach(b=>b.onclick=()=>{ const el=$('#s'+b.dataset.k); window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdr'))||150),behavior:'smooth'}); });
+  document.querySelectorAll('.say').forEach(b=>b.onclick=()=>{ const ph=TRIP.phrases[+b.dataset.say]; openSheet(`<h3>이거 보여줘</h3><p class="lead">${esc(ph[0])}</p><div class="bigsay">${esc(ph[1])}</div><p style="color:var(--accent);font-size:16px">${esc(ph[2])}</p>`); });
+  document.querySelectorAll('.lost').forEach(b=>b.onclick=()=>{ const s=steps[+b.dataset.k]; openSheet(`<h3>길 잃었을 때</h3><p class="lead">당황하지 말고 둘 중 하나.</p>
     <a class="cta" target="_blank" rel="noopener" href="${s.v?gdir('현재 위치',s.v.lat+','+s.v.lng):gdir('현재 위치',s.q||s.a)}">${ms('directions','s')} 지금 가려던 곳으로 길찾기</a>
     <a class="cta" target="_blank" rel="noopener" href="${gdir('현재 위치',TRIP.home.q,'driving')}">${ms('local_taxi','s')} 택시 타고 숙소</a>
-    <div class="kv" style="margin-top:14px">${ms('badge')}<div><b>택시 기사에게</b><p>${esc(TRIP.phrases[0][1])}</p><small>${esc(TRIP.home.address)}</small></div></div>`);
-  // 스와이프
-  let x0=null; const rc=$('.rc'); rc.ontouchstart=e=>{x0=e.touches[0].clientX}; rc.ontouchend=e=>{ if(x0==null)return; const dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)>60) go(dx<0?1:-1); };
-  document.querySelectorAll('iframe[data-src]').forEach(f=>{f.src=f.dataset.src;f.removeAttribute('data-src');});
-  renderBar();
+    <div class="kv" style="margin-top:14px">${ms('badge')}<div><b>택시 기사에게</b><p>${esc(TRIP.phrases[0][1])}</p><small>${esc(TRIP.home.address)}</small></div></div>`); });
+  // 마지막으로 보던 자리로
+  const k0=stepIdx[TRIP.id+':'+day.id]||0; setNow(0);
+  if(k0>0){ requestAnimationFrame(()=>{ const el=$('#s'+k0); if(el) window.scrollTo(0,el.getBoundingClientRect().top+window.scrollY-(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdr'))||150)); setTimeout(pick,50); }); }
 }
 
 /* ---------- 하단 바 / 시트 ---------- */
 function renderBar(){
   const b=$('#bar'); b.hidden=false;
-  b.innerHTML=`<div class="wrap"><button id="bKit">${ms('contactless')}교통</button><button id="bSay">${ms('translate')}한마디</button><a href="${gdir('현재 위치',TRIP.home.q)}" target="_blank" rel="noopener">${ms('home')}숙소로</a></div>`;
+  b.innerHTML=`<div class="wrap"><button id="bKit">${ms('contactless')}<span>교통</span></button><button id="bSay">${ms('translate')}<span>한마디</span></button><a href="${gdir('현재 위치',TRIP.home.q)}" target="_blank" rel="noopener">${ms('home')}<span>숙소</span></a></div>`;
   $('#bKit').onclick=()=>openSheet(`<h3>교통</h3><p class="lead">${esc(TRIP.transit.card)} 하나로 거의 다 됨.</p>${TRIP.transit.kit.map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p>${k.sub?`<small>${esc(k.sub)}</small>`:''}</div></div>`).join('')}`);
   $('#bSay').onclick=()=>openSheet(`<h3>한마디</h3><p class="lead">화면 그대로 보여줘도 됨.</p>${TRIP.phrases.map(p=>`<div class="ph"><div class="ko">${esc(p[0])}</div><div class="jp">${esc(p[1])}</div><div class="ro">${esc(p[2])}</div></div>`).join('')}`);
 }
