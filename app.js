@@ -178,7 +178,7 @@ function rowHTML(s,k,n){
   else if(s.v){ img=`<a class="imglink" target="_blank" rel="noopener" href="${pano(s.v.lat,s.v.lng)}">${ms('streetview','s')}${esc(s.v.cap||'로드뷰')}</a>`; }
   return `<div class="row" id="s${k}" data-k="${k}">${ms(ti)}<div class="rbd">
     ${head}
-    <p class="r3">${esc([s.a,s.b,s.more].filter(Boolean).map(x=>/[.。!?)\]」]$/.test(x.trim())?x.trim():x.trim()+'.').join(' '))}</p>
+    <p class="r3">${esc(s.text||[s.a,s.b,s.more].filter(Boolean).join(' '))}</p>
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
     ${img}
   </div></div>`;
