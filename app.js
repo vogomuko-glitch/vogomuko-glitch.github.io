@@ -52,7 +52,7 @@ async function openTrip(meta){
 
 /* ---------- 시작 화면 ---------- */
 function renderHome(){
-  TRIP=null; document.title='여행';
+  TRIP=null; document.body.classList.remove('cards'); document.title='여행';
   $('#top').innerHTML=`<div class="top-row"><h1>여행</h1></div>`;
   $('#bar').hidden=true;
   $('#main').innerHTML=`<section class="home">
@@ -79,15 +79,21 @@ function newTripSheet(){
 /* ---------- 여행 화면 ---------- */
 function now(){ const n=new Date(); return {key:(n.getMonth()+1)+'/'+n.getDate(),hm:n.getHours()*60+n.getMinutes()}; }
 function todayIndex(){ const k=now().key; const i=TRIP.days.findIndex(d=>d.d===k); return i<0?0:i; }
+let mode=LS.get('trip.mode','cards'); // cards=리허설(기본) / list=전체 보기
+const TYPE={walk:['걷기','directions_walk'],ride:['타기','directions_bus'],taxi:['택시','local_taxi'],buy:['사기·맡기기','confirmation_number'],see:['보기','visibility'],do:['하기','task_alt'],arrive:['도착','flag']};
 function renderTrip(){
   const tk=now().key;
-  $('#top').innerHTML=`<div class="top-row"><a class="ib" href="#" aria-label="여행 목록">${ms('arrow_back')}</a><h1>${esc(TRIP.title)}</h1><button class="ib r" id="bInfo" aria-label="정보">${ms('info')}</button></div>
+  $('#top').innerHTML=`<div class="top-row"><a class="ib" href="#" aria-label="여행 목록">${ms('arrow_back')}</a><h1>${esc(TRIP.title)}</h1><button class="ib r" id="bMode" aria-label="보기 전환">${ms(mode==='cards'?'view_list':'view_carousel')}</button><button class="ib r" id="bInfo" aria-label="정보">${ms('info')}</button></div>
     <div class="days" role="tablist">${TRIP.days.map(d=>`<button role="tab" class="day ${d.id===cur?'on':''} ${d.d===tk?'today':''}" data-id="${d.id}" aria-selected="${d.id===cur}"><small>${esc(d.w)}</small><b class="num">${esc(d.d)}</b></button>`).join('')}</div>`;
   $('#top').querySelectorAll('.day').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);renderTrip();window.scrollTo(0,0);});
+  $('#bMode').onclick=()=>{mode=mode==='cards'?'list':'cards';LS.set('trip.mode',mode);renderTrip();window.scrollTo(0,0);};
   $('#bInfo').onclick=()=>openSheet(`<h3>${esc(TRIP.title)}</h3><p class="lead">${esc(TRIP.dates)} · ${esc(TRIP.tzNote||TRIP.timezone)}</p>
     <div class="kv">${ms('home')}<div><b>${esc(TRIP.home.name)}</b><p>${esc(TRIP.home.address)}</p><small>${esc(TRIP.home.note||'')}</small></div></div>
-    <div class="kv">${ms('rule')}<div><b>표시 규칙</b><p>${ms('verified','s')} 공식 시간표 · ${ms('schedule','s')} 내가 정한 시간 · ${ms('help','s')} 예상, 현장에서 확인</p><small>"위치 근사"는 지도 핀이 대략적이라는 뜻. 가게 이름으로 지도 열기 눌러서 확인.</small></div></div>`);
+    <div class="kv">${ms('view_carousel')}<div><b>리허설</b><p>한 장에 한 동작. 집에서 넘겨보며 장면을 외우는 용도. 사진이 이상하면 카드 번호를 알려줘.</p></div></div>
+    <div class="kv">${ms('view_list')}<div><b>전체 보기</b><p>하루 전체 시간표. ${ms('verified','s')} 공식 시간표 · ${ms('schedule','s')} 내가 정한 시간 · ${ms('help','s')} 예상, 현장에서 확인</p></div></div>`);
   const day=TRIP.days.find(d=>d.id===cur);
+  document.body.classList.remove('cards');
+  if(mode==='cards'&&day.steps&&day.steps.length){ renderCards(day); return; }
   const nv=day.items.filter(i=>i.st==='v'||i.st==='est').length, np=day.items.filter(i=>i.k==='p').length;
   let h=`<div class="dh"><h2>${esc(day.title)}</h2><div class="city">${esc(day.city)}</div>
     <div class="meta">${day.home?`<span>${ms('home','s')}${esc(day.home)}</span>`:''}<span>${ms('location_on','s')}${np}곳</span>${nv?`<span class="warn">${ms('help','s')}현장 확인 ${nv}건</span>`:''}</div></div>`;
@@ -147,6 +153,46 @@ function calcRows(){
   const v=flights[TRIP.id]; if(!v) return '<table><tr><td>시각을 넣으면 몇 시에 나가야 하는지 나와</td><td>—</td></tr></table>';
   const [h,m]=v.split(':').map(Number); let t=h*60+m; const f=x=>{x=((x%1440)+1440)%1440;return String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');};
   return '<table>'+TRIP.returnCalc.steps.map(s=>{t-=s[1];return `<tr><td>${esc(s[0])}</td><td class="num">${f(t)}</td></tr>`;}).join('')+'</table>';
+}
+
+/* ---------- 리허설 카드 ---------- */
+let stepIdx=LS.get('trip.step',{});
+function renderCards(day){
+  const n=day.steps.length; let i=Math.min(stepIdx[TRIP.id+':'+day.id]||0,n-1); if(i<0)i=0;
+  const s=day.steps[i]; const [tn,ti]=TYPE[s.type]||TYPE.do;
+  const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
+  let view;
+  if(CAN_EMBED){
+    const src=s.v?svurl(s.v.lat,s.v.lng,s.v.h||0):mapurl(s.q||s.a);
+    view=`<div class="cv"><div class="ph">${s.v?'로드뷰':'지도'} 불러오는 중</div><iframe title="장면" data-src="${src}" loading="eager" referrerpolicy="no-referrer-when-downgrade"></iframe>${s.v&&s.v.cap?`<span class="cap">${esc(s.v.cap)}</span>`:''}${!s.v?`<span class="cap">지도 · ${esc(s.q||'')}</span>`:''}</div>`;
+  } else view=`<div class="cv flat"><a class="big" target="_blank" rel="noopener" href="${s.v?pano(s.v.lat,s.v.lng):gmap(s.q||s.a)}">${ms(s.v?'streetview':'map')} ${s.v?'로드뷰 열기':'지도 열기'}</a></div>`;
+  const meta=[s.t?`<b class="num">${esc(s.t)}</b>`:'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join('<i>·</i>');
+  document.body.classList.add('cards');
+  $('#main').innerHTML=`<section class="rc">
+    <div class="rh"><span class="ty">${ms(ti)}${tn}</span><span class="rm">${meta}</span><span class="pg num">${i+1} / ${n}</span></div>
+    ${view}
+    <h2 class="ra">${esc(s.a)}</h2>
+    ${s.b?`<p class="rb">${ms('visibility','s')}${esc(s.b)}</p>`:''}
+    ${sayItem?`<button class="say" id="saySheet">${ms('translate','s')}보여줄 말: <b>${esc(sayItem[1])}</b></button>`:''}
+    ${s.more?`<details class="rmore"><summary>자세히</summary><p>${esc(s.more)}</p></details>`:''}
+    <div class="racts">
+      <a target="_blank" rel="noopener" href="${s.v?gmap(s.v.lat+','+s.v.lng):gmap(s.q||s.a)}">${ms('map','s')}지도</a>
+      ${s.v?`<a target="_blank" rel="noopener" href="${pano(s.v.lat,s.v.lng)}">${ms('streetview','s')}로드뷰 크게</a>`:''}
+      <button id="lost">${ms('sos','s')}길 잃음</button>
+    </div>
+  </section>
+  <nav class="rn"><button id="prev" ${i===0?'disabled':''}>${ms('arrow_back')}이전</button><button id="next" class="pri" ${i===n-1?'disabled':''}>다음${ms('arrow_forward')}</button></nav>`;
+  const go=d=>{stepIdx[TRIP.id+':'+day.id]=Math.max(0,Math.min(n-1,i+d));LS.set('trip.step',stepIdx);renderCards(day);window.scrollTo(0,0);};
+  $('#prev').onclick=()=>go(-1); $('#next').onclick=()=>go(1);
+  if(sayItem) $('#saySheet').onclick=()=>openSheet(`<h3>이거 보여줘</h3><p class="lead">${esc(sayItem[0])}</p><div class="bigsay">${esc(sayItem[1])}</div><p class="ro" style="color:var(--accent);font-size:16px">${esc(sayItem[2])}</p>`);
+  $('#lost').onclick=()=>openSheet(`<h3>길 잃었을 때</h3><p class="lead">당황하지 말고 둘 중 하나.</p>
+    <a class="cta" target="_blank" rel="noopener" href="${s.v?gdir('현재 위치',s.v.lat+','+s.v.lng):gdir('현재 위치',s.q||s.a)}">${ms('directions','s')} 지금 가려던 곳으로 길찾기</a>
+    <a class="cta" target="_blank" rel="noopener" href="${gdir('현재 위치',TRIP.home.q,'driving')}">${ms('local_taxi','s')} 택시 타고 숙소</a>
+    <div class="kv" style="margin-top:14px">${ms('badge')}<div><b>택시 기사에게</b><p>${esc(TRIP.phrases[0][1])}</p><small>${esc(TRIP.home.address)}</small></div></div>`);
+  // 스와이프
+  let x0=null; const rc=$('.rc'); rc.ontouchstart=e=>{x0=e.touches[0].clientX}; rc.ontouchend=e=>{ if(x0==null)return; const dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)>60) go(dx<0?1:-1); };
+  document.querySelectorAll('iframe[data-src]').forEach(f=>{f.src=f.dataset.src;f.removeAttribute('data-src');});
+  renderBar();
 }
 
 /* ---------- 하단 바 / 시트 ---------- */
