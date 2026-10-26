@@ -173,7 +173,8 @@ function cardHTML(day,s,k){
   const meta=[(s.t&&!s.place)?`<b class="num">${esc(s.t)}</b>`:'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join('<i>·</i>');
   return `<section class="rc ${s.place?'isplace':''}" id="s${k}" data-k="${k}">
     ${s.place?`<h3 class="stop">${esc(s.place)}${s.t?`<small class="num">${esc(s.t)}</small>`:''}</h3>`:''}
-    <div class="rh">${ms(ti)}<span class="ty">${tn}</span><span class="rm">${meta}</span><span class="pg num">${k+1}</span></div>
+    <div class="rh">${ms(ti)}${s.line?`<span class="line">${esc(s.line)}</span>`:''}<span class="ty">${tn}</span><span class="rm">${meta}</span><span class="pg num">${k+1}</span></div>
+    ${s.off?`<div class="off">${ms('logout','s')}${esc(s.off)}${s.stops?` <span class="dim">· ${esc(s.stops)}</span>`:''}</div>`:''}
     ${view}
     <h2 class="ra">${esc(s.a)}</h2>
     ${s.b?`<p class="rb">${ms('visibility','s')}${esc(s.b)}</p>`:''}
