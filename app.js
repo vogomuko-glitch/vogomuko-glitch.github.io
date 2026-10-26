@@ -176,11 +176,13 @@ function rowHTML(s,k,n){
   let img='';
   if(CAN_EMBED&&s.v){ img=`<div class="cv"><div class="ph">로드뷰</div><iframe title="장면" data-src="${svurl(s.v.lat,s.v.lng,s.v.h||0)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${esc(s.v.cap||'')}</span></div>`; }
   else if(s.v){ img=`<a class="imglink" target="_blank" rel="noopener" href="${pano(s.v.lat,s.v.lng)}">${ms('streetview','s')}${esc(s.v.cap||'로드뷰')}</a>`; }
-  return `<div class="row" id="s${k}" data-k="${k}">${ms(ti)}<div class="rbd">
-    ${head}
+  const P=(TRIP.places||{})[s.pid]; const intro=P&&P.intro?`<p class="intro">${esc(P.intro)}${P.note?` <span class="dim">${esc(P.note)}</span>`:''}</p>`:'';
+  const links=P&&(P.ig||P.web)?`<div class="plinks">${P.ig?`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}@${esc(P.ig)}</a>`:''}${P.web?`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`:''}</div>`:'';
+  return `<div class="row ${P?'hasp':''}" id="s${k}" data-k="${k}">${ms(ti)}<div class="rbd">
+    ${head}${intro}
     <p class="r3">${esc(s.text||[s.a,s.b,s.more].filter(Boolean).join(' '))}</p>
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
-    ${img}
+    ${img}${links}
   </div></div>`;
 }
 function renderCards(day){
