@@ -11,10 +11,23 @@ const pano=(lat,lng)=>'https://www.google.com/maps/@?api=1&map_action=pano&viewp
 const svurl=(lat,lng,h=0)=>'https://maps.google.com/maps?q=&layer=c&cbll='+lat+','+lng+'&cbp=11,'+h+',0,0,0&output=svembed';
 const mapurl=q=>'https://maps.google.com/maps?q='+encodeURIComponent(q)+'&z=16&hl=ko&output=embed';
 const CAN_EMBED=!/claude|artifact/.test(location.hostname);
+function nowHTML(day){
+  const n=now(); if(day.d!==n.key) return `<div class="legend"><span><i class="o"></i>장소</span><span><i class="d"></i>이동 (점선 따라 내려가면 됨)</span></div>`;
+  const toMin=t=>{const m=/(\d{1,2}):(\d{2})/.exec(t||'');return m?+m[1]*60+ +m[2]:null;};
+  const timed=day.items.map((it,i)=>({it,i,m:toMin(it.t)})).filter(x=>x.m!=null);
+  let curI=null,nextI=null; for(const x of timed){ if(x.m<=n.hm) curI=x; else { nextI=x; break; } }
+  if(!curI&&nextI) curI=null;
+  const lab=x=>x.it.k==='p'?esc(x.it.name):('이동 → '+esc(x.it.to));
+  const dir=x=>x.it.k==='l'?gdir(x.it.q1,x.it.q2):gmap(x.it.q||x.it.name);
+  return `<div class="now">
+    <div class="nr"><span class="k">지금</span><b>${curI?lab(curI):'아직 시작 전'}</b></div>
+    ${nextI?`<div class="nr"><span class="k">다음 ${esc(nextI.it.t)}</span><b>${lab(nextI)}</b><a class="go" target="_blank" rel="noopener" href="${dir(nextI)}">${ms('directions','s')}길찾기</a></div>`:`<div class="nr"><span class="k">다음</span><b>오늘 일정 끝</b></div>`}
+  </div>`;
+}
 const STATUS={user:['내가 정한 시간','schedule',''],tt:['공식 시간표','verified','ok'],est:['예상 · 현장 확인','help','v'],v:['확인 필요','help','v']};
 
 let INDEX=null, TRIP=null, cur=null;
-let marks=LS.get('trip.marks',{}), flights=LS.get('trip.flight',{});
+let flights=LS.get('trip.flight',{});
 
 async function loadJSON(p){ if(window.__BUNDLE__&&window.__BUNDLE__[p]) return window.__BUNDLE__[p]; const r=await fetch(p,{cache:'no-cache'}); return r.json(); }
 
@@ -78,6 +91,7 @@ function renderTrip(){
   const nv=day.items.filter(i=>i.st==='v'||i.st==='est').length, np=day.items.filter(i=>i.k==='p').length;
   let h=`<div class="dh"><h2>${esc(day.title)}</h2><div class="city">${esc(day.city)}</div>
     <div class="meta">${day.home?`<span>${ms('home','s')}${esc(day.home)}</span>`:''}<span>${ms('location_on','s')}${np}곳</span>${nv?`<span class="warn">${ms('help','s')}현장 확인 ${nv}건</span>`:''}</div></div>`;
+  h+=nowHTML(day);
   if(day.flight&&TRIP.returnCalc) h+=calcHTML();
   h+=`<div class="tl">${day.items.map((it,i)=>it.k==='p'?placeHTML(day,it,i):legHTML(day,it,i)).join('')}</div>`;
   $('#main').innerHTML=h;
@@ -85,7 +99,6 @@ function renderTrip(){
   document.querySelectorAll('iframe[data-src]').forEach(f=>{f.src=f.dataset.src;f.removeAttribute('data-src');});
   renderBar();
 }
-const mk=(day,i)=>marks[TRIP.id+':'+day.id+':'+i]||'';
 function factsHTML(it){
   const [sl,si,sc]=STATUS[it.st]||STATUS.est;
   const tags=(it.tags||[]).map(t=>{
@@ -94,43 +107,39 @@ function factsHTML(it){
   return `<div class="facts"><span class="${sc}">${ms(si,'s')}${sl}</span>${tags.join('')}</div>`;
 }
 function placeHTML(day,it,i){
-  const m=mk(day,i);
   let frame='';
   if(CAN_EMBED){
     const src=(it.lat&&!it.approx)?svurl(it.lat,it.lng,it.h||0):mapurl(it.q||it.name);
     frame=`<div class="sv"><div class="ph">${it.lat&&!it.approx?'로드뷰':'지도'} 불러오는 중</div><iframe title="${esc(it.name)}" data-src="${src}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>`;
   }
-  return `<article class="it ${m}" data-i="${i}">
+  return `<article class="it" data-i="${i}">
     <div class="tc"><b class="num">${esc(it.t)}</b>${it.approx?'위치 근사':''}</div>
     <div class="bd">
       <h3 class="nm">${esc(it.name)}</h3><div class="ja">${esc(it.ja)}</div>
       ${it.what?`<p class="what">${esc(it.what)}</p>`:''}${it.why?`<p class="why">${esc(it.why)}</p>`:''}
       ${factsHTML(it)}
-      ${it.todo?`<div class="todo">${it.todo.map(t=>`<div>${ms('check_box_outline_blank','s')}<span>${esc(t)}</span></div>`).join('')}</div>`:''}
+      ${it.todo?`<div class="todo"><div class="cap">여기서 할 일</div>${it.todo.map(t=>`<div>${esc(t)}</div>`).join('')}</div>`:''}
       ${frame}
       <div class="acts">
         <a class="ab" target="_blank" rel="noopener" href="${gmap(it.q||it.name)}">${ms('map')}지도</a>
         ${it.lat?`<a class="ab" target="_blank" rel="noopener" href="${pano(it.lat,it.lng)}">${ms('streetview')}로드뷰</a>`:''}
-        <button class="ab ${m==='done'?'on':''}" data-m="done">${ms(m==='done'?'check_circle':'radio_button_unchecked')}다녀옴</button>
-        <button class="ab muted" data-m="skip">${ms(m==='skip'?'undo':'skip_next')}${m==='skip'?'되돌리기':'건너뜀'}</button>
       </div>
     </div></article>`;
 }
 function legHTML(day,it,i){
-  const m=mk(day,i); const [sl,si,sc]=STATUS[it.st]||STATUS.est;
+  const [sl,si,sc]=STATUS[it.st]||STATUS.est;
   const modes=[...new Set(it.steps.map(s=>s.icon))].map(n=>ms(n,'s')).join('');
   const total=(it.total||'').replace(/\s*·\s*(Suica OK|카드 OK)/,''); const card=/Suica OK|카드 OK/.test(it.total||'');
-  return `<article class="it leg ${m}" data-i="${i}">
+  return `<article class="it leg" data-i="${i}">
     <div class="tc"><b class="num">${esc(it.t)}</b></div>
     <div class="bd">
-      <div class="lh"><span class="modes">${modes}</span><b>${esc(total)}</b><span class="dest">${esc(it.to)}까지</span>${card?`<span class="ok">${ms('contactless','s')}${esc(TRIP.transit.card.split(' ')[0])}</span>`:''}</div>
+      <div class="lh"><span class="word">이동</span><span class="modes">${modes}</span><b>${esc(total)}</b><span class="dest">${esc(it.to)}까지</span>${card?`<span class="ok">${ms('contactless','s')}${esc(TRIP.transit.card.split(' ')[0])}</span>`:''}</div>
       <ul class="steps">${it.steps.map(s=>`<li>${ms(s.icon)}<span class="s">${esc(s.text)}${s.sub?`<small>${esc(s.sub)}</small>`:''}</span><span class="r num"><b>${esc(s.time)}</b>${esc(s.fare)}</span></li>`).join('')}</ul>
       ${it.alt?`<p class="note">대안 · ${esc(it.alt)}</p>`:''}${it.note?`<p class="note">${esc(it.note)}</p>`:''}
-      <div class="acts"><a class="ab" target="_blank" rel="noopener" href="${gdir(it.q1,it.q2)}">${ms('directions')}길찾기</a><span class="ab muted ${sc}">${ms(si)}${sl}</span><button class="ab ${m==='done'?'on':''}" data-m="done">${ms(m==='done'?'check_circle':'radio_button_unchecked')}완료</button></div>
+      <div class="acts"><a class="ab" target="_blank" rel="noopener" href="${gdir(it.q1,it.q2)}">${ms('directions')}길찾기</a><span class="ab muted ${sc}">${ms(si)}${sl}</span></div>
     </div></article>`;
 }
 function bindDay(day){
-  document.querySelectorAll('.it [data-m]').forEach(b=>b.onclick=()=>{const i=b.closest('.it').dataset.i,k=TRIP.id+':'+day.id+':'+i,v=b.dataset.m;marks[k]=marks[k]===v?'':v;LS.set('trip.marks',marks);renderTrip();});
   const f=$('#flight'); if(f) f.oninput=()=>{flights[TRIP.id]=f.value;LS.set('trip.flight',flights);$('#calcOut').innerHTML=calcRows();};
 }
 function calcHTML(){ const rc=TRIP.returnCalc; return `<div class="calc"><label for="flight">${esc(rc.label)}</label><input id="flight" type="time" value="${esc(flights[TRIP.id]||'')}"><div id="calcOut">${calcRows()}</div><p class="hint">${rc.steps.map(s=>s[0].replace(/\s*\(.*\)/,'')+' '+s[1]+'분').join(' · ')}. ${esc(rc.hint||'')}</p></div>`; }

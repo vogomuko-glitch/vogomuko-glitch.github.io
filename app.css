@@ -58,9 +58,6 @@ html.icons .ms{visibility:visible}
 .it .tc b{display:block;font-size:15px;font-weight:600;color:var(--ink)}
 .it .bd{grid-column:3;min-width:0}
 .it::before{content:"";grid-column:2;justify-self:center;margin-top:6px;width:9px;height:9px;border:1.5px solid var(--ink);border-radius:50%;background:var(--bg);position:relative;z-index:1}
-.it.done::before{background:var(--ink)}
-.it.skip .bd{opacity:.45}
-.it.done .nm::after{content:"check";font-family:"Material Symbols Outlined";font-weight:300;font-size:20px;color:var(--ok);margin-left:6px;vertical-align:-4px}
 .nm{margin:0;font-size:20px;font-weight:700;letter-spacing:-.015em;line-height:1.3}
 .ja{margin-top:3px;font-size:13.5px;color:var(--ink2);line-height:1.45}
 .what{margin:10px 0 0;font-size:15.5px}
@@ -71,7 +68,9 @@ html.icons .ms{visibility:visible}
 .facts .v{color:var(--warn)}
 .facts .ok{color:var(--ok)}
 .todo{margin:12px 0 0;padding:2px 0 2px 12px;border-left:1px solid var(--ink);font-size:14px}
-.todo div{display:flex;gap:8px;align-items:flex-start;padding:3px 0}
+.todo div{padding:3px 0}
+.todo div::before{content:"– ";color:var(--ink2)}
+.todo .cap{font-size:12px;letter-spacing:.06em;color:var(--ink2);padding-bottom:2px}.todo .cap::before{content:none}
 .sv{margin:14px 0 0;aspect-ratio:16/10;max-width:100%;border:1px solid var(--line);position:relative}
 .sv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .sv .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink3)}
@@ -92,6 +91,7 @@ html.icons .ms{visibility:visible}
 .it.leg .tc b{font-size:12.5px;font-weight:500;color:var(--ink3)}
 .it.leg .bd{padding:6px 0 0}
 .lh{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:13.5px;color:var(--ink2);padding-bottom:4px}
+.lh .word{font-size:12px;letter-spacing:.08em;color:var(--ink2);border:1px solid var(--line2);padding:1px 6px}
 .lh .modes{display:inline-flex;gap:2px;color:var(--ink)}
 .lh b{color:var(--ink);font-weight:600;font-size:14px}
 .lh .ok{color:var(--ok);display:inline-flex;align-items:center;gap:3px}
@@ -160,3 +160,16 @@ html.icons .ms{visibility:visible}
 .cta.dis{border-color:var(--line2);color:var(--ink3)}
 .fine{font-size:12.5px;color:var(--ink2);margin-top:10px}
 @media (prefers-reduced-motion:no-preference){.pn{animation:up .22s ease-out}@keyframes up{from{transform:translateY(16px);opacity:.6}to{transform:none;opacity:1}}}
+
+/* 지금/다음 띠 */
+.now{border:1px solid var(--ink);margin:16px 0 4px;padding:4px 14px}
+.nr{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px dashed var(--line)}
+.nr:first-child{border-top:0}
+.nr .k{font-size:12.5px;color:var(--ink2);letter-spacing:.02em}
+.nr b{font-size:16px;font-weight:600;min-width:0}
+.nr .go{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500;border:1px solid var(--line2);padding:5px 10px;white-space:nowrap}
+.legend{display:flex;gap:18px;margin:14px 0 2px;font-size:12.5px;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:9px;height:9px}
+.legend .o{border:1.5px solid var(--ink);border-radius:50%}
+.legend .d{width:0;height:14px;border-left:1px dashed var(--line2)}
