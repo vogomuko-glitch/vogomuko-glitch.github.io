@@ -174,17 +174,22 @@ function cardHTML(day,s,k){
   const nodes=s.on||s.off?`<div class="nodes">${s.on?`<div class="nd on"><i></i><span>${esc(s.on)}</span></div>`:''}${s.off?`<div class="nd off"><i></i><span>${esc(s.off)}</span></div>`:''}</div>`:'';
   return `<section class="rc ${s.place?'isplace':''}" id="s${k}" data-k="${k}">
     ${s.place?`<h3 class="stop">${esc(s.place)}${s.t?`<small class="num">${esc(s.t)}</small>`:''}</h3>`:''}
-    <div class="rh">${ms(ti)}${s.line?`<span class="line">${esc(s.line)}</span>`:''}<span class="ty">${tn}${(!s.line&&s.dur)?' '+esc(s.dur):''}</span>${s.line?`<span class="rm">${meta}</span>`:(s.fare?`<span class="rm">${esc(s.fare)}</span>`:'')}<span class="tm num">${(s.t&&!s.place)?esc(s.t):''}</span><span class="pg num">${k+1}</span></div>
-    ${nodes}
+    <div class="hd">
+      <div class="rh">${ms(ti)}${s.line?`<span class="line">${esc(s.line)}</span>`:''}<span class="ty">${tn}${(!s.line&&s.dur)?' '+esc(s.dur):''}</span>${s.line?`<span class="rm">${meta}</span>`:(s.fare?`<span class="rm">${esc(s.fare)}</span>`:'')}<span class="tm num">${(s.t&&!s.place)?esc(s.t):''}</span></div>
+      ${nodes}
+      <h2 class="ra">${esc(s.a)}</h2>
+      ${s.b?`<p class="rb">${ms('visibility','s')}${esc(s.b)}</p>`:''}
+      ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<span>보여줄 말</span><b>${esc(sayItem[1])}</b></button>`:''}
+    </div>
     ${view}
-    <h2 class="ra">${esc(s.a)}</h2>
-    ${s.b?`<p class="rb">${ms('visibility','s')}${esc(s.b)}</p>`:''}
-    ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}보여줄 말: <b>${esc(sayItem[1])}</b></button>`:''}
-    ${s.more?`<details class="rmore"><summary>자세히</summary><p>${esc(s.more)}</p></details>`:''}
-    <div class="racts">
-      <a target="_blank" rel="noopener" href="${s.v?gmap(s.v.lat+','+s.v.lng):gmap(s.q||s.a)}">${ms('map','s')}지도</a>
-      ${s.v?`<a target="_blank" rel="noopener" href="${pano(s.v.lat,s.v.lng)}">${ms('streetview','s')}로드뷰 크게</a>`:''}
-      <button class="lost" data-k="${k}">${ms('sos','s')}길 잃음</button>
+    <div class="ft">
+      ${s.more?`<details class="rmore"><summary>${ms('expand_more','s')}자세히</summary><p>${esc(s.more)}</p></details>`:''}
+      <div class="racts">
+        <a target="_blank" rel="noopener" href="${s.v?gmap(s.v.lat+','+s.v.lng):gmap(s.q||s.a)}">${ms('map','s')}지도</a>
+        ${s.v?`<a target="_blank" rel="noopener" href="${pano(s.v.lat,s.v.lng)}">${ms('streetview','s')}로드뷰</a>`:''}
+        <button class="lost" data-k="${k}">${ms('sos','s')}길 잃음</button>
+        <span class="pg num">${k+1}/${day.steps.length}</span>
+      </div>
     </div>
   </section>`;
 }
