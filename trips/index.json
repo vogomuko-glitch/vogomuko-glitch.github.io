@@ -1,0 +1,13 @@
+{
+ "trips": [
+  {
+   "id": "kyoto-2026",
+   "title": "교토 6일",
+   "subtitle": "교토 · 이네 · 나라 · 고베 · 오사카",
+   "dates": "2026-10-31 ~ 2026-11-05",
+   "country": "JP",
+   "countryName": "일본",
+   "file": "trips/kyoto-2026.json"
+  }
+ ]
+}
