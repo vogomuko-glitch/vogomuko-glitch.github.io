@@ -29,7 +29,7 @@ const STATUS={user:['내가 정한 시간','schedule',''],tt:['공식 시간표'
 let INDEX=null, TRIP=null, cur=null;
 let flights=LS.get('trip.flight',{});
 
-async function loadJSON(p){ if(window.__BUNDLE__&&window.__BUNDLE__[p]) return window.__BUNDLE__[p]; const r=await fetch(p,{cache:'no-cache'}); return r.json(); }
+async function loadJSON(p){ if(window.__BUNDLE__&&window.__BUNDLE__[p]) return window.__BUNDLE__[p]; const r=await fetch(p+(p.includes('?')?'&':'?')+'v='+(window.__V__||Date.now()),{cache:'no-store'}); return r.json(); }
 
 /* ---------- 라우팅 ---------- */
 function tripIdFromHash(){ const h=location.hash.replace(/^#/,''); return h||null; }
@@ -227,6 +227,6 @@ sheet.onclick=e=>{ if(e.target===sheet) sheet.hidden=true; };
 
 (document.fonts?document.fonts.load('300 24px "Material Symbols Outlined"'):Promise.resolve()).then(()=>document.documentElement.classList.add('icons')).catch(()=>document.documentElement.classList.add('icons'));
 setTimeout(()=>document.documentElement.classList.add('icons'),4000);
-if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js?v='+(window.__V__||'0')).catch(()=>{});
 boot().catch(e=>{ $('#main').innerHTML=`<p style="padding:40px 0;color:var(--ink2)">데이터를 못 불러왔어. 새로고침 해봐.<br><small>${esc(e.message)}</small></p>`; });
 })();
