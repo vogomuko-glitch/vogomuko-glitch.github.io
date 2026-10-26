@@ -167,8 +167,23 @@ function renderCards(day){
     view=`<div class="cv"><div class="ph">${s.v?'로드뷰':'지도'} 불러오는 중</div><iframe title="장면" data-src="${src}" loading="eager" referrerpolicy="no-referrer-when-downgrade"></iframe>${s.v&&s.v.cap?`<span class="cap">${esc(s.v.cap)}</span>`:''}${!s.v?`<span class="cap">지도 · ${esc(s.q||'')}</span>`:''}</div>`;
   } else view=`<div class="cv flat"><a class="big" target="_blank" rel="noopener" href="${s.v?pano(s.v.lat,s.v.lng):gmap(s.q||s.a)}">${ms(s.v?'streetview':'map')} ${s.v?'로드뷰 열기':'지도 열기'}</a></div>`;
   const meta=[s.t?`<b class="num">${esc(s.t)}</b>`:'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join('<i>·</i>');
+  // 왼쪽 세로 타임라인: 장소(see/arrive/do)만 점으로. 지금 장소 = 채운 점, 이동 중 = 두 점 사이 굵은 선
+  const isPlace=st=>!!st.place;
+  const anchors=day.steps.map((st,k)=>isPlace(st)?k:-1).filter(k=>k>=0);
+  let at=-1; anchors.forEach((k,ai)=>{ if(k<=i) at=ai; });            // 지나온 마지막 장소
+  const atPlace=at>=0&&anchors[at]===i;                               // 지금 장소에 있음
+  const moving=!atPlace;                                              // 장소 사이 이동/준비 중
+  const nextA=at+1<anchors.length?anchors[at+1]:null;
+  const shortName=st=>st.place||st.a.slice(0,5);
+  const rail=`<aside class="rail" aria-label="오늘 장소">${anchors.map((k,ai)=>{
+    const st=day.steps[k]; const cls=ai===at&&atPlace?'now':(ai<=at?'past':'');
+    const seg=ai<anchors.length-1?`<i class="seg ${moving&&ai===at?'live':''} ${ai<at?'past':''}"></i>`:'';
+    return `<button class="rd ${cls}" data-k="${k}"><b></b><span>${esc(shortName(st))}</span></button>${seg}`; }).join('')}</aside>`;
+  const ctx=atPlace?`${ms('location_on','s')}지금 ${at+1}/${anchors.length} · <b>${esc(shortName(day.steps[anchors[at]]))}</b>`
+    :(nextA!=null?`${ms('directions_walk','s')}이동 중 → <b>${esc(shortName(day.steps[nextA]))}</b>${at>=0?` <span class="dim">(${esc(shortName(day.steps[anchors[at]]))}에서)</span>`:''}`:`${ms('flag','s')}오늘 마지막`);
   document.body.classList.add('cards');
-  $('#main').innerHTML=`<section class="rc">
+  $('#main').innerHTML=`<div class="rw">${rail}<section class="rc">
+    <div class="ctx">${ctx}</div>
     <div class="rh"><span class="ty">${ms(ti)}${tn}</span><span class="rm">${meta}</span><span class="pg num">${i+1} / ${n}</span></div>
     ${view}
     <h2 class="ra">${esc(s.a)}</h2>
@@ -180,10 +195,11 @@ function renderCards(day){
       ${s.v?`<a target="_blank" rel="noopener" href="${pano(s.v.lat,s.v.lng)}">${ms('streetview','s')}로드뷰 크게</a>`:''}
       <button id="lost">${ms('sos','s')}길 잃음</button>
     </div>
-  </section>
+  </section></div>
   <nav class="rn"><button id="prev" ${i===0?'disabled':''}>${ms('arrow_back')}이전</button><button id="next" class="pri" ${i===n-1?'disabled':''}>다음${ms('arrow_forward')}</button></nav>`;
   const go=d=>{stepIdx[TRIP.id+':'+day.id]=Math.max(0,Math.min(n-1,i+d));LS.set('trip.step',stepIdx);renderCards(day);window.scrollTo(0,0);};
   $('#prev').onclick=()=>go(-1); $('#next').onclick=()=>go(1);
+  document.querySelectorAll('.rail .rd').forEach(b=>b.onclick=()=>go(+b.dataset.k-i));
   if(sayItem) $('#saySheet').onclick=()=>openSheet(`<h3>이거 보여줘</h3><p class="lead">${esc(sayItem[0])}</p><div class="bigsay">${esc(sayItem[1])}</div><p class="ro" style="color:var(--accent);font-size:16px">${esc(sayItem[2])}</p>`);
   $('#lost').onclick=()=>openSheet(`<h3>길 잃었을 때</h3><p class="lead">당황하지 말고 둘 중 하나.</p>
     <a class="cta" target="_blank" rel="noopener" href="${s.v?gdir('현재 위치',s.v.lat+','+s.v.lng):gdir('현재 위치',s.q||s.a)}">${ms('directions','s')} 지금 가려던 곳으로 길찾기</a>

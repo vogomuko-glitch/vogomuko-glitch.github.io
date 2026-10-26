@@ -206,3 +206,24 @@ html.icons .ms{visibility:visible}
 body.cards{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
 .bigsay{font-size:30px;font-weight:700;line-height:1.35;margin:10px 0 6px;letter-spacing:-.01em}
 .cta.ms{font-size:inherit}
+
+/* 카드 모드: 왼쪽 세로 타임라인 + 오른쪽 카드 */
+.rw{display:grid;grid-template-columns:68px 1fr;gap:0 10px;align-items:start}
+.rail{position:sticky;top:calc(108px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:stretch;padding:14px 0 0;max-height:calc(100vh - 260px);overflow:hidden}
+.rail .rd{display:grid;grid-template-columns:12px 1fr;gap:6px;align-items:center;padding:0;min-height:18px}
+.rail .rd b{width:10px;height:10px;border:1.5px solid var(--ink3);border-radius:50%;background:var(--bg);justify-self:center;display:block}
+.rail .rd span{font-size:11px;line-height:1.1;color:var(--ink3);word-break:keep-all}
+.rail .rd.past b{border-color:var(--ink2);background:var(--ink2)}
+.rail .rd.past span{color:var(--ink2)}
+.rail .rd.now b{width:14px;height:14px;border:2px solid var(--ink);background:var(--ink);box-shadow:0 0 0 3px var(--bg),0 0 0 4px var(--ink)}
+.rail .rd.now span{color:var(--ink);font-weight:700;font-size:12px}
+.rail .seg{display:block;width:0;flex:1 1 auto;min-height:14px;margin:2px 0 2px 5px;border-left:1px dashed var(--line2)}
+.rail .seg.past{border-left:1px solid var(--ink2)}
+.rail .seg.live{border-left:3px solid var(--ink);margin-left:4px;min-height:22px}
+.ctx{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink2);padding:12px 0 6px;border-bottom:1px solid var(--line)}
+.ctx b{color:var(--ink);font-weight:700}
+.ctx .dim{color:var(--ink3)}
+.ctx .ms{color:var(--ink)}
+.rc{padding:0}
+.rh{padding-top:10px}
+@media (min-width:480px){.rw{grid-template-columns:80px 1fr}.rail .rd span{font-size:12px}}
