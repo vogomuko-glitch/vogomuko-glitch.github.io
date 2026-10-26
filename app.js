@@ -25,10 +25,12 @@ async function boot(){
   const id=tripIdFromHash()||LS.get('trip.last',null);
   const t=INDEX.trips.find(x=>x.id===id);
   if(t) await openTrip(t); else renderHome();
-  window.addEventListener('hashchange',async()=>{const id=tripIdFromHash();const t=INDEX.trips.find(x=>x.id===id);if(t)await openTrip(t);else renderHome();});
+  window.addEventListener('hashchange',()=>{const id=tripIdFromHash();const t=INDEX.trips.find(x=>x.id===id);if(t)openTrip(t);else renderHome();});
 }
+function fail(e){ $('#main').innerHTML=`<p style="padding:40px 0;color:var(--ink2)">데이터를 못 불러왔어. 새로고침 해봐.<br><small>${esc(e&&e.message||e)}</small></p>`; }
 async function openTrip(meta){
-  TRIP=await loadJSON(meta.file); LS.set('trip.last',TRIP.id);
+  try{ TRIP=await loadJSON(meta.file); }catch(e){ return fail(e); }
+  LS.set('trip.last',TRIP.id);
   if(location.hash!=='#'+TRIP.id) history.replaceState(null,'','#'+TRIP.id);
   document.title=TRIP.title;
   cur=LS.get('trip.day.'+TRIP.id,null); if(!TRIP.days.some(d=>d.id===cur)) cur=TRIP.days[todayIndex()].id;
@@ -42,10 +44,11 @@ function renderHome(){
   $('#bar').hidden=true;
   $('#main').innerHTML=`<section class="home">
     <h2>내 여행</h2><p class="lead">날짜별 동선, 가는 법, 요금, 로드뷰까지 한 화면에.</p>
-    ${INDEX.trips.map(t=>`<a class="trip" href="#${t.id}"><div><b>${esc(t.title)}</b><span>${esc(t.subtitle||'')} · ${esc(t.dates)}</span></div>${ms('chevron_right')}</a>`).join('')}
+    ${INDEX.trips.map(t=>`<button class="trip" data-id="${t.id}"><div><b>${esc(t.title)}</b><span>${esc(t.subtitle||'')} · ${esc(t.dates)}</span></div>${ms('chevron_right')}</button>`).join('')}
     <button class="trip new" id="newTrip"><div><b>새 여행 만들기</b><span>나라를 고르면 취향에 맞춰 플랜을 짜줘요</span></div>${ms('add')}</button>
   </section>`;
   $('#newTrip').onclick=newTripSheet;
+  document.querySelectorAll('.trip[data-id]').forEach(b=>b.onclick=()=>{const t=INDEX.trips.find(x=>x.id===b.dataset.id);if(t)openTrip(t);});
 }
 function newTripSheet(){
   const countries=['일본','대만','태국','베트남','홍콩','싱가포르','프랑스','이탈리아','스페인','포르투갈','영국','미국'];
@@ -115,14 +118,15 @@ function placeHTML(day,it,i){
 }
 function legHTML(day,it,i){
   const m=mk(day,i); const [sl,si,sc]=STATUS[it.st]||STATUS.est;
+  const modes=[...new Set(it.steps.map(s=>s.icon))].map(n=>ms(n,'s')).join('');
+  const total=(it.total||'').replace(/\s*·\s*(Suica OK|카드 OK)/,''); const card=/Suica OK|카드 OK/.test(it.total||'');
   return `<article class="it leg ${m}" data-i="${i}">
-    <div class="tc"><b class="num">${esc(it.t)}</b>이동</div>
+    <div class="tc"><b class="num">${esc(it.t)}</b></div>
     <div class="bd">
-      <div class="route">${esc(it.from)}${ms('arrow_forward')}${esc(it.to)}</div>
+      <div class="lh"><span class="modes">${modes}</span><b>${esc(total)}</b><span class="dest">${esc(it.to)}까지</span>${card?`<span class="ok">${ms('contactless','s')}${esc(TRIP.transit.card.split(' ')[0])}</span>`:''}</div>
       <ul class="steps">${it.steps.map(s=>`<li>${ms(s.icon)}<span class="s">${esc(s.text)}${s.sub?`<small>${esc(s.sub)}</small>`:''}</span><span class="r num"><b>${esc(s.time)}</b>${esc(s.fare)}</span></li>`).join('')}</ul>
-      <div class="sum"><span class="facts" style="margin:0"><span class="${sc}">${ms(si,'s')}${sl}</span>${/Suica OK|카드 OK/.test(it.total||'')?`<span class="ok">${ms('contactless','s')}${esc(TRIP.transit.card.split(' ')[0])}</span>`:''}</span><b>${esc(it.total||'')}</b></div>
       ${it.alt?`<p class="note">대안 · ${esc(it.alt)}</p>`:''}${it.note?`<p class="note">${esc(it.note)}</p>`:''}
-      <div class="acts"><a class="ab" target="_blank" rel="noopener" href="${gdir(it.q1,it.q2)}">${ms('directions')}길찾기</a><button class="ab ${m==='done'?'on':''}" data-m="done">${ms(m==='done'?'check_circle':'radio_button_unchecked')}이동 완료</button></div>
+      <div class="acts"><a class="ab" target="_blank" rel="noopener" href="${gdir(it.q1,it.q2)}">${ms('directions')}길찾기</a><span class="ab muted ${sc}">${ms(si)}${sl}</span><button class="ab ${m==='done'?'on':''}" data-m="done">${ms(m==='done'?'check_circle':'radio_button_unchecked')}완료</button></div>
     </div></article>`;
 }
 function bindDay(day){
