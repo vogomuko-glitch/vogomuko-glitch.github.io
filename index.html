@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="교토 6일">
+<meta name="theme-color" content="#1b1f24">
+<title>교토 6일</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 레이아웃: 상단 고정 날짜 탭 + 세로 타임라인. 장소 카드(흰 면) / 이동 카드(점선 레일) 두 종류만. */
+:root{
+  --bg:#eef0ec; --card:#ffffff; --ink:#1b1f24; --ink2:#5a6168; --line:#d9ddd6;
+  --accent:#2f6b4f; --accent-soft:#e2efe7; --warn:#a1620a; --warn-soft:#fbefd9;
+  --ok:#2f6b4f; --skip:#8a8f94; --rail:#b9c0b7;
+  --font:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#15181b; --card:#1f2327; --ink:#eceff1; --ink2:#a4acb3; --line:#30363c;
+  --accent:#7cc39c; --accent-soft:#213a2e; --warn:#f0b35b; --warn-soft:#3b2d14;
+  --ok:#7cc39c; --skip:#737a80; --rail:#4a525a; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#15181b; --card:#1f2327; --ink:#eceff1; --ink2:#a4acb3; --line:#30363c;
+  --accent:#7cc39c; --accent-soft:#213a2e; --warn:#f0b35b; --warn-soft:#3b2d14;
+  --ok:#7cc39c; --skip:#737a80; --rail:#4a525a; color-scheme:dark; }
+
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+
+/* 헤더 */
+.top{position:sticky;top:0;z-index:20;background:var(--bg);padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid var(--line)}
+.top-in{padding:10px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.brand h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.brand .sub{font-size:12px;color:var(--ink2)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;min-width:64px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);text-align:left;line-height:1.2}
+.tab b{display:block;font-size:14px}
+.tab span{display:block;font-size:11px;color:var(--ink2);margin-top:2px}
+.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab.on span{color:var(--bg);opacity:.75}
+
+/* 본문 */
+.wrap{padding:14px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));max-width:680px;margin:0 auto}
+.day-head{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;margin:2px 0 12px}
+.day-head h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+.day-head .city{font-size:13px;color:var(--ink2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{font-size:12px;padding:4px 9px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--ink2)}
+.chip.home{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.chip.warn{border-color:transparent;color:var(--warn);background:var(--warn-soft)}
+
+/* 타임라인 */
+.tl{position:relative;padding-left:58px}
+.tl::before{content:"";position:absolute;left:49px;top:6px;bottom:6px;width:2px;background:var(--rail);border-radius:2px}
+.item{position:relative;margin-bottom:14px}
+.t{position:absolute;left:-58px;top:10px;width:44px;text-align:right;font-size:12px;line-height:1.25;color:var(--ink2)}
+.t b{display:block;color:var(--ink);font-size:13px;font-weight:600}
+.dot{position:absolute;left:-14px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--accent)}
+.item.leg .dot{width:8px;height:8px;left:-12px;top:16px;border-color:var(--rail);background:var(--rail)}
+.item.done .dot{background:var(--ok);border-color:var(--ok)}
+.item.skip{opacity:.5}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card .hd{padding:12px 14px 0}
+.name{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25;margin:0}
+.ja{font-size:12.5px;color:var(--ink2);margin-top:3px;line-height:1.4}
+.what{margin:8px 0 0;font-size:14px}
+.why{margin:4px 0 0;font-size:13px;color:var(--ink2)}
+.meta{display:flex;flex-wrap:wrap;gap:5px;padding:10px 14px 0}
+.tag{font-size:11.5px;padding:3px 8px;border-radius:7px;background:var(--bg);border:1px solid var(--line);color:var(--ink2)}
+.tag.v{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.ok{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.money{color:var(--ink);font-weight:600}
+.todo{margin:10px 14px 0;padding:9px 11px;border-radius:10px;background:var(--accent-soft);font-size:13px}
+.todo b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+.note{margin:8px 14px 0;font-size:12.5px;color:var(--ink2)}
+.sv{margin:12px 0 0;aspect-ratio:16/10;max-width:100%;background:var(--bg);position:relative}
+.sv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.sv .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink2)}
+.svb{padding:12px 14px 0;display:flex}
+.acts{display:flex;gap:8px;padding:10px 14px 12px;flex-wrap:wrap}
+.btn{flex:1 1 auto;min-width:0;text-align:center;font-size:13px;font-weight:600;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);text-decoration:none;white-space:nowrap}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.sm{flex:0 0 auto;font-weight:500}
+.btn:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.item.done .btn.chk{background:var(--accent);border-color:var(--accent);color:#fff}
+.item.skip .btn.skp{background:var(--skip);border-color:var(--skip);color:#fff}
+
+/* 이동 카드 */
+.leg .card{background:transparent;border:1px dashed var(--rail);border-radius:12px}
+.leg .route{padding:10px 14px 0;font-size:14px;font-weight:600}
+.leg .route span{color:var(--ink2);font-weight:400}
+.steps{list-style:none;margin:8px 0 0;padding:0 14px}
+.steps li{display:grid;grid-template-columns:22px 1fr auto;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13px;align-items:start}
+.steps li:first-child{border-top:0}
+.steps .ic{font-size:14px;line-height:1.4}
+.steps .s{min-width:0}
+.steps .s small{display:block;color:var(--ink2);font-size:11.5px;line-height:1.35}
+.steps .r{text-align:right;color:var(--ink2);font-size:12px;white-space:nowrap}
+.steps .r b{display:block;color:var(--ink);font-weight:600}
+.sum{display:flex;justify-content:space-between;gap:8px;padding:8px 14px 0;font-size:13px}
+.sum b{font-weight:700}
+
+/* 귀국 계산 */
+.calc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.calc label{display:block;font-size:12px;color:var(--ink2);margin-bottom:6px}
+.calc input{font:inherit;font-size:20px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.calc table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
+.calc td{padding:7px 0;border-top:1px solid var(--line)}
+.calc td:last-child{text-align:right;font-weight:700}
+.calc .hint{font-size:12px;color:var(--ink2);margin-top:8px}
+
+/* 하단 바 */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;background:var(--bg);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar .btn{padding:11px 8px}
+
+/* 시트 */
+.sheet{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}
+.sheet[hidden]{display:none}
+.sheet .pn{background:var(--bg);width:100%;max-height:86vh;overflow:auto;border-radius:18px 18px 0 0;padding:14px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.pn h3{margin:4px 0 10px;font-size:18px}
+.pn h4{margin:16px 0 6px;font-size:13px;letter-spacing:.04em;color:var(--ink2);text-transform:uppercase}
+.kv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:8px}
+.kv b{display:block;font-size:13px;margin-bottom:2px}
+.kv small{color:var(--ink2);display:block;font-size:12px}
+.ph2{display:grid;grid-template-columns:1fr;gap:6px}
+.ph2 .kv{margin:0}
+.ph2 .jp{font-size:15px;font-weight:600}
+.ph2 .ro{color:var(--accent)}
+.close{width:100%;margin-top:14px}
+@media (prefers-reduced-motion:no-preference){.card{transition:opacity .2s}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><h1>교토 6일</h1><span class="sub" id="today"></span></div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<nav class="bar">
+  <button class="btn" id="bKit">🚃 교통·Suica</button>
+  <button class="btn" id="bSay">🗣 한마디</button>
+  <a class="btn pri" id="bHome" target="_blank" rel="noopener">🏠 숙소로</a>
+</nav>
+
+<div class="sheet" id="sheet" hidden><div class="pn" id="pn"></div></div>
+
+<script>
+/* ============ 데이터 ============ */
+// 상태: user=내가 정한 시간 / tt=공식 시간표 / est=예상(현장 확인) / v=확인 필요
+const HOME = {
+  name:'소라쿠안 Sorakuan', ja:'京都市北区鷹峯千束町2-5', q:'Sorakuan Takagamine Kyoto',
+  note:'택시 기사한테 보여줄 주소: 京都市北区鷹峯千束町2-5 (예약 메일 주소랑 한 번 대조)'
+};
+const gmap = q => 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+const gdir = (a,b,m='transit') => 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(a)+'&destination='+encodeURIComponent(b)+'&travelmode='+m;
+const svurl = (lat,lng,h=0) => 'https://maps.google.com/maps?q=&layer=c&cbll='+lat+','+lng+'&cbp=11,'+h+',0,0,0&output=svembed';
+const mapurl = q => 'https://maps.google.com/maps?q='+encodeURIComponent(q)+'&z=16&hl=ko&output=embed';
+
+const DAYS = [
+{ id:'d1031', d:'10/31', w:'토', title:'도착 · 겐닌지 · 기온 · 귀청소', city:'간사이공항 → 교토', home:'18:30 숙소', items:[
+  {k:'p', t:'09:30', st:'user', name:'간사이공항 T1 도착', ja:'関西国際空港 第1ターミナル · Kansai Airport T1',
+   what:'입국심사 → 수하물 → 1층 도착로비 → "JR·난카이" 표지 따라 연결통로 도보 7분 → JR 매표소.',
+   why:'여기서 표 2장 미리 해결하면 나머지 여행은 Suica로만 다님.',
+   lat:34.4347,lng:135.2440,h:200, q:'関西空港駅 JR',
+   todo:['JR 매표소(みどりの窓口)에서 하루카 왕복: 오늘 교토행 + 11/5 공항행','Suica 잔액 1만 엔 되게 폰에서 충전'],
+   tags:['항공편명 미입력']},
+  {k:'l', t:'10:44', st:'v', from:'간사이공항', to:'교토역', q1:'関西空港駅', q2:'京都駅',
+   steps:[['🚄','특급 하루카(はるか · HARUKA) 교토행','전석 지정석 · Suica로는 못 탐, 창구에서 산 표로','약 75분','약 3,600엔']],
+   total:'약 1시간 15분', note:'10:44 / 11:14 둘 다 후보. 매표소에서 바로 탈 수 있는 편으로 끊으면 됨.'},
+  {k:'p', t:'12:10', st:'est', name:'교토역 짐 보관 + 표 하나 더', ja:'京都駅 Crosta(クロスタ) · Kyoto Station',
+   what:'JR 중앙개찰 나와서 왼쪽, 1층 "Crosta Kyoto" 짐 보관 카운터. 15kg 캐리어 하루 맡김.',
+   why:'오늘 종일 몸만 다니려고. 찾는 건 17시쯤.',
+   lat:34.9858,lng:135.7588,h:0, q:'Crosta Kyoto 手荷物預かり',
+   todo:['Crosta: 캐리어 1개 (약 800엔, 20시 마감 확인)','같은 역 みどりの窓口에서 11/2 특급 하시다테 왕복 지정석: 니조 ↔ 아마노하시다테'],
+   tags:['8:00–20:00','약 800엔 · 확인']},
+  {k:'l', t:'12:40', st:'est', from:'교토역', to:'겐닌지', q1:'京都駅', q2:'建仁寺',
+   steps:[['🚌','시버스 206번 · 교토역 앞 D2 승강장 → 기온(祇園 · Gion) 정류장','뒷문 타고 내릴 때 Suica 찍음','약 20분','230엔'],['🚶','기온 정류장 → 겐닌지 북문','야사카 신사 반대쪽(남쪽)으로','5분','']],
+   total:'약 25분 · Suica OK', alt:'급하면 택시 10분 · 약 1,500엔'},
+  {k:'p', t:'13:00', st:'user', name:'겐닌지', ja:'建仁寺(겐닌지 · Kennin-ji)',
+   what:'교토에서 제일 오래된 선종 절(1202년). 풍신뇌신도 병풍, 법당 천장의 쌍룡 그림, 마른 산수 정원.',
+   why:'공간·여백·먹 — 네 수묵 취향이랑 제일 맞는 곳. 90분 넉넉히.',
+   lat:35.0005,lng:135.7736,h:0, q:'建仁寺',
+   tags:['10:00–17:00 · 입장 16:30','800엔','경내 탑두 서래원(西来院)은 시간 남으면']},
+  {k:'p', t:'14:30', st:'user', name:'하나미코지 · 기온 골목', ja:'花見小路(하나미코지 · Hanamikoji) · 祇園(기온 · Gion)',
+   what:'겐닌지 북문으로 나오면 바로 돌길 시작. 마치야(町家) 찻집·요정이 줄지어 있음. 30분 천천히.',
+   why:'걸어서 0분. 사진.', lat:35.0028,lng:135.7750,h:0, q:'花見小路', tags:['도보 0분','무료']},
+  {k:'p', t:'15:00', st:'user', name:'가모강 산책', ja:'鴨川(가모가와 · Kamo River) 四条大橋 아래',
+   what:'하나미코지 북쪽 끝에서 시조도리로 나와 서쪽으로 7분 → 시조대교. 다리 아래 강변 계단으로 내려감.',
+   why:'30분만. 11/3에 여기서 북쪽으로 뛰게 됨.', lat:35.0036,lng:135.7715,h:300, q:'四条大橋', tags:['도보 7분','무료']},
+  {k:'l', t:'15:30', st:'est', from:'가모강(시조대교)', to:'니시키시장 귀청소', q1:'四条大橋', q2:'イヤーサプリ 京都錦市場店',
+   steps:[['🚶','시조대교 → 시조도리 서쪽으로 → 다카쿠라도리에서 북쪽 → 니시키시장(錦市場 · Nishiki)','시장 안 "고양이 벽" 보이면 그 골목','10분','']],
+   total:'도보 10분'},
+  {k:'p', t:'15:45', st:'user', name:'귀청소 (이어 에스테)', ja:'イヤーサプリ 京都錦市場店(이야사프리 · Ear Sapuri Nishiki)',
+   what:'프로가 해주는 귀청소 전문점. 60분 코스, 침대에 누워서. 남녀공용, 완전예약제.',
+   why:'여행 앞단에 넣기로 한 것. 끝나면 역까지 3분.',
+   q:'イヤーサプリ 京都錦市場店', approx:true,
+   todo:['LINE으로 예약: lin.ee/MrLoT5p (15:45 전후)','요금은 예약하면서 확인 · 현금 조금 준비'],
+   tags:['한큐 가라스마역 14번 출구 도보 3분','예약 필수']},
+  {k:'l', t:'16:50', st:'est', from:'귀청소', to:'교토역', q1:'四条駅 京都市営地下鉄', q2:'京都駅',
+   steps:[['🚶','니시키시장 → 지하철 시조역(四条 · Shijo) 14번 출구','','3분',''],['🚇','가라스마선(烏丸線 · Karasuma Line) 다케다(竹田)행 · 시조 → 교토','2정거장','5분','220엔']],
+   total:'약 10분 · Suica OK'},
+  {k:'p', t:'17:05', st:'est', name:'교토역 짐 찾기', ja:'京都駅 Crosta',
+   what:'아침에 맡긴 Crosta 카운터. 보관증 꺼내두기.', why:'', lat:34.9858,lng:135.7588,h:0, q:'Crosta Kyoto', tags:['20시 마감']},
+  {k:'l', t:'17:30', st:'est', from:'교토역', to:'숙소 소라쿠안', q1:'京都駅', q2:HOME.q,
+   steps:[['🚇','가라스마선 고쿠사이카이칸(国際会館)행 · 교토 → 기타오지(北大路 · Kitaoji)','종점 방향, 그냥 끝까지 타지 말고 기타오지에서 내림','15분','260엔'],['🚕','기타오지역 택시 승강장 → 소라쿠안','주소 보여주기: 京都市北区鷹峯千束町2-5','10분','약 1,500엔']],
+   total:'약 35분', alt:'캐리어 끌기 싫으면 교토역에서 택시 직행 30분 · 약 3,500엔'},
+  {k:'p', t:'18:30', st:'user', name:'숙소 도착 · 체크인', ja:'Sorakuan 鷹峯(다카가미네 · Takagamine)',
+   what:'오늘 끝. 내일 7:15 출발이라 짐 풀고 러닝복 꺼내두기(11/3용).', why:'', q:HOME.q, approx:true, tags:['체크인 시간 예약 메일 확인']}
+]},
+
+{ id:'d1101', d:'11/1', w:'일', title:'오하라 · 차실 · 종이와 화방 · 미술관', city:'교토', home:'20:00 숙소', items:[
+  {k:'l', t:'07:15', st:'est', from:'숙소', to:'오하라', q1:HOME.q, q2:'三千院',
+   steps:[['🚕','소라쿠안 → 지하철 고쿠사이카이칸역(国際会館 · Kokusaikaikan)','아침이라 바로 잡힘. 3번 출구 쪽 버스 터미널','약 20분','약 2,500엔'],['🚌','교토버스 19번 오하라(大原 · Ohara)행 · 고쿠사이카이칸 → 오하라 종점','Suica 뒷문 탈 때 찍고 내릴 때 또','약 23분','360엔'],['🚶','오하라 정류장 → 산젠인','표지 따라 완만한 오르막, 가게 골목','10분','']],
+   total:'약 1시간 · 90분 잡아둠', note:'버스 시각은 현장 전광판. 19번 놓치면 다음 편 15~20분 뒤.'},
+  {k:'p', t:'08:45', st:'tt', name:'산젠인', ja:'三千院(산젠인 · Sanzen-in)',
+   what:'오하라의 큰 천태종 절. 이끼 정원 안에 서 있는 작은 불당(往生極楽院)과 아미타삼존이 핵심.',
+   why:'11월 개문 08:45. 첫 손님으로 들어가야 조용함.', lat:35.1197,lng:135.8343,h:0, q:'三千院',
+   tags:['08:45 개문 · 11월','700엔','약 65분']},
+  {k:'p', t:'10:05', st:'user', name:'호센인', ja:'宝泉院(호센인 · Hosen-in)',
+   what:'기둥을 액자 삼아 정원을 보는 "액연정원". 입장료에 말차+과자 포함, 앉아서 마심.',
+   why:'산젠인에서 도보 5분(짓코인 지나서). 50분.', lat:35.1203,lng:135.8325,h:0, q:'宝泉院',
+   tags:['09:00–17:00 · 입장 16:30','800엔 (말차 포함)','도보 5분']},
+  {k:'l', t:'11:00', st:'tt', from:'오하라', to:'Farmoon', q1:'大原 バス停', q2:'茶楼 Farmoon',
+   steps:[['🚶','호센인 → 오하라 버스정류장','내려가는 길, 11:20까지 도착','15분',''],['🚌','교토버스 17번 교토역행 · 오하라 11:27 → 하나조노바시(花園橋 · Hanazonobashi) 11:46','공식 일요일 시간표(2026-09-28 개정)','19분','약 400엔 · 확인'],['🚌','시버스 5번 교토역행 · 하나조노바시 11:59 → 기타시라카와벳토초(北白川別当町 · Kitashirakawa-Bettocho) 12:11','길 건너 5번 승차위치 확인','12분','230엔'],['🚶','정류장 → Farmoon','동쪽 주택가 골목','약 10분','']],
+   total:'약 1시간 10분 · Suica OK', note:'17번 늦으면 5번 다음 편 타면 됨. Farmoon 도착 12:25 목표.'},
+  {k:'p', t:'12:25', st:'user', name:'Farmoon', ja:'茶楼 Farmoon(파문 · Farmoon) · 北白川',
+   what:'오래된 집을 고친 차실(茶楼). 차 코스랑 간단한 식사. 예약 없이 가는 곳이라 대기 가능.',
+   why:'여기서 점심 겸 차. 55분 잡음.', q:'茶楼 Farmoon 京都', approx:true,
+   tags:['금~일 11:00–16:00 · 재확인','walk-in','京都市左京区北白川東久保田町9']},
+  {k:'l', t:'13:20', st:'est', from:'Farmoon', to:'산조·데라마치', q1:'茶楼 Farmoon', q2:'紙司柿本',
+   steps:[['🚶','Farmoon → 기타시라카와벳토초 정류장(올 때 내린 곳 건너편)','','10분',''],['🚌','시버스 5번 교토역행 → 가와라마치산조(河原町三条 · Kawaramachi-Sanjo)','','약 20분','230엔'],['🚶','가와라마치산조 → 가키모토','산조도리 서쪽으로 두 블록, 후야초도리에서 북쪽','5분','']],
+   total:'약 35분 · Suica OK', alt:'택시 15분 · 약 1,800엔'},
+  {k:'p', t:'14:00', st:'user', name:'가미지 가키모토', ja:'紙司柿本(가미지 가키모토 · Kamiji Kakimoto)',
+   what:'교토 종이 전문점. 와시·편지지·봉투. 지금은 임시 매장(麩屋町通三条上ル).',
+   why:'이번 여행 종이 가게는 여기 한 곳만. 25분.', lat:35.0092,lng:135.7664,h:0, q:'紙司柿本 麩屋町',
+   tags:['09:30–17:00 · 일요일 영업','京都市中京区麩屋町通三条上ル下白山町310']},
+  {k:'p', t:'14:25', st:'user', name:'사이운도', ja:'彩雲堂(사이운도 · Saiundo)',
+   what:'일본화 물감·안료 가게. 유리병에 담긴 색 가루들이 진열 자체로 볼거리.',
+   why:'가키모토에서 도보 4분. 20분.', q:'彩雲堂 京都 姉小路', approx:true,
+   tags:['수요일 휴무 · 일요일 영업 확인 필요','京都市中京区姉大東町552']},
+  {k:'p', t:'14:45', st:'user', name:'규쿄도 교토 본점', ja:'京都鳩居堂(규쿄도 · Kyukyodo)',
+   what:'붓·먹·종이·향 노포(1663년). 서화용품 보고 향 하나 사도 좋음.',
+   why:'사이운도에서 도보 3분. 20분.', lat:35.0101,lng:135.7672,h:0, q:'京都鳩居堂 本店',
+   tags:['10:00–18:00 · 11/1 영업 공식 확인','京都市中京区寺町姉小路上ル']},
+  {k:'l', t:'15:05', st:'est', from:'데라마치', to:'오카자키 미술관', q1:'京都鳩居堂 本店', q2:'京都国立近代美術館',
+   steps:[['🚶','규쿄도 → 가와라마치산조 정류장','','4분',''],['🚌','시버스 5번 긴카쿠지행 → 오카자키코엔 비주츠칸·헤이안진구마에(岡崎公園 美術館・平安神宮前)','','약 10분','230엔'],['🚶','정류장 → 국립근대미술관 입구','','3분','']],
+   total:'약 20분 · Suica OK', alt:'걸으면 20분 (산조도리 동쪽 → 진구미치)'},
+  {k:'p', t:'15:30', st:'user', name:'교토국립근대미술관', ja:'京都国立近代美術館(MoMAK)',
+   what:'주얼리 전시 「ジュエリーは、誰を夢みる」(10/24~1/17). 4층 상설도 좋음.',
+   why:'65분. 상세히 보기엔 짧으니 전시 하나 집중.', lat:35.0133,lng:135.7818,h:0, q:'京都国立近代美術館',
+   tags:['10:00–18:00 · 입장 17:30','2,000엔 · 예약 불필요']},
+  {k:'p', t:'16:45', st:'user', name:'교토시 교세라미술관', ja:'京都市京セラ美術館(교세라 · Kyocera Museum)',
+   what:'길 건너편. 1933년 건물을 2020년에 리노베이션 — 지하 입구 슬로프 자체가 볼거리. 현대미술 동(東山キューブ).',
+   why:'전시별 입장 마감 다르니 도착하자마자 확인.', lat:35.0137,lng:135.7840,h:270, q:'京都市京セラ美術館',
+   tags:['10:00–18:00','전시별 요금 · 확인','도보 3분']},
+  {k:'l', t:'18:00', st:'est', from:'오카자키', to:'숙소', q1:'京都市京セラ美術館', q2:HOME.q,
+   steps:[['🚕','교세라미술관 앞 → 소라쿠안','저녁은 가는 길 or 숙소 근처. 지하철 환승 2번보다 택시가 나음','약 25분','약 3,000엔']],
+   total:'약 25분', alt:'지하철: 도자이선 히가시야마(東山) → 가라스마오이케(烏丸御池) 환승 → 기타오지 + 택시 10분'}
+]},
+
+{ id:'d1102', d:'11/2', w:'월', title:'이네 바닷마을', city:'교토 → 이네 → 교토', home:'20:30 숙소 (이 날만 늦어도 됨)', items:[
+  {k:'l', t:'07:00', st:'v', from:'숙소', to:'JR 니조역', q1:HOME.q, q2:'二条駅',
+   steps:[['🚕','소라쿠안 → JR 니조역(二条 · Nijo)','교토역까지 안 내려감. 니조에서 탐','약 20분','약 2,500엔 · 확인']],
+   total:'약 20분', note:'열차 출발 20분 전 도착. 표는 10/31에 교토역에서 미리 삼.'},
+  {k:'l', t:'07:40', st:'v', from:'니조역', to:'아마노하시다테역', q1:'二条駅', q2:'天橋立駅',
+   steps:[['🚄','특급 하시다테(はしだて · HASHIDATE) 아마노하시다테행 · 니조 → 아마노하시다테','전석 지정석. 10/31에 산 표. 차량·좌석 표에 적혀 있음','약 2시간','약 4,500엔 · 창구 확인']],
+   total:'약 2시간', note:'실제 출발 시각은 표에 적힌 대로. 니조 정차 편으로 끊어달라고 하기.'},
+  {k:'l', t:'09:50', st:'v', from:'아마노하시다테역', to:'이네', q1:'天橋立駅', q2:'伊根 バス停',
+   steps:[['🚌','단카이버스(丹海バス · Tankai Bus) 이네(伊根 · Ine) 방면 · 역 앞 정류장','현금 400엔 준비(IC 되는지 현장 확인). 앞문 타고 뒷문 내림','약 55분','400엔']],
+   total:'약 1시간', note:'돌아오는 마지막 편 시각을 타자마자 정류장에서 사진 찍어두기.'},
+  {k:'p', t:'11:00', st:'user', name:'이네 후나야 산책', ja:'伊根の舟屋(이네노 후나야 · Ine Funaya)',
+   what:'1층이 배 차고, 2층이 집인 "후나야"가 230채 바다 따라 늘어선 마을. 해안 도로 따라 걸으며 사진.',
+   why:'60~90분. 집은 생활공간이라 안쪽은 안 들어감.', lat:35.6744,lng:135.2878,h:90, q:'伊根の舟屋',
+   tags:['무료','전망: 舟屋の里公園 (언덕 위, 15분 오르막)']},
+  {k:'p', t:'12:30', st:'user', name:'점심', ja:'伊根 (후나야 식당)',
+   what:'후나야를 고친 식당에서 생선 정식. 11시 반 넘으면 줄 서니 산책 중에 먼저 봐두기.',
+   why:'45~60분.', q:'伊根 舟屋 ランチ', approx:true, tags:['현금 넉넉히']},
+  {k:'p', t:'13:30', st:'user', name:'바닷가 카페 · 추가 산책', ja:'INE CAFE · 伊根湾',
+   what:'창 밖이 바로 바다인 카페. 60~90분 느슨하게.',
+   why:'남는 시간은 여기서 버림.', q:'INE CAFE', approx:true, tags:['선택: 이네만 유람선 25분 · 약 1,200엔 · 날씨 좋을 때만']},
+  {k:'l', t:'15:10', st:'v', from:'이네', to:'니조역 → 숙소', q1:'伊根 バス停', q2:HOME.q,
+   steps:[['🚌','단카이버스 아마노하시다테역행','현금 400엔','약 55분','400엔'],['🚄','특급 하시다테 교토행 · 아마노하시다테 → 니조','10/31에 산 돌아오는 표','약 2시간','표'],['🚕','니조역 → 소라쿠안','','약 20분','약 2,500엔']],
+   total:'약 3시간 20분', note:'선택: 시간 남으면 아마노하시다테역 옆 온천 지에노유(智恵の湯) — 귀환 열차랑 맞을 때만.'}
+]},
+
+{ id:'d1103', d:'11/3', w:'화·공휴일', title:'한나리 런 3km → 나라', city:'교토 → 나라 → 교토', home:'19:30 숙소', items:[
+  {k:'l', t:'07:45', st:'est', from:'숙소', to:'대회장', q1:HOME.q, q2:'鴨川 北大路橋',
+   steps:[['🚕','소라쿠안 → 기타오지바시 동쪽 끝 하천부지(鴨川北大路橋東詰)','러닝복 입고 출발. 기사한테 "기타오지바시"','약 15분','약 1,500엔']],
+   total:'약 15분', alt:'지하철 기타오지역 ③번 출구에서 동쪽으로 380m 도보'},
+  {k:'p', t:'08:00', st:'tt', name:'제10회 가모가와 한나리 런 · 접수', ja:'第10回かも川はんなりラン(가모가와 한나리 란 · Kamogawa Hannari Run)',
+   what:'가모강 하천부지에서 하는 동네 러닝 대회. 기록 측정 없음, "뛴 만큼이 골". 3km 부문.',
+   why:'접수 07:30–09:30. 참가비 1,000엔 현장 현금. 짐 놓는 곳 있음(귀중품 보관은 없음 → 폰·지갑은 벨트에).',
+   lat:35.0435,lng:135.7633,h:180, q:'鴨川北大路橋東詰 河川敷',
+   todo:['11/1(일) 23:59까지 사전신청: moshicom.com/151160 (현장 접수도 되지만 양식 김)','마이컵 챙기기(급수대용) · 1,000엔 현금'],
+   tags:['09:20 라디오 체조','09:45 3km 스타트','비 오면 당일 새벽 4시 페이스북 공지']},
+  {k:'p', t:'09:45', st:'tt', name:'3km 스타트', ja:'鴨川(가모가와) 北大路橋 → 鴨川デルタ 반환',
+   what:'남쪽으로 내려가 가모강 델타(두 강 합류점) 찍고 돌아옴. 번호표는 골인 후 반납.',
+   why:'끝나면 1인용 탈의 텐트에서 갈아입고 짐 회수. 10:40 출발 목표.', lat:35.0300,lng:135.7718,h:0, q:'鴨川デルタ',
+   tags:['완주증 · 참가상 있음','계측 없음 — 워치로']},
+  {k:'l', t:'10:40', st:'est', from:'대회장', to:'나라', q1:'鴨川 北大路橋', q2:'近鉄奈良駅',
+   steps:[['🚶','대회장 → 지하철 기타오지역(北大路 · Kitaoji)','서쪽으로 380m','5분',''],['🚇','가라스마선 · 기타오지 → 교토','','15분','260엔'],['🚶','지하철 교토역 → 긴테쓰 교토역(近鉄京都 · Kintetsu Kyoto)','JR 중앙구 지나 남쪽, 표지 "近鉄"','5분',''],['🚃','긴테쓰 급행(急行) 나라행 · 긴테쓰교토 → 긴테쓰나라(近鉄奈良 · Kintetsu-Nara)','급행은 Suica OK. 특급(特急)은 +520엔 표 따로 — 급행 타면 됨','약 45분','760엔']],
+   total:'약 1시간 15분 · Suica OK', note:'공휴일(문화의 날)이라 붐빔. 서서 갈 수도.'},
+  {k:'p', t:'12:00', st:'user', name:'점심 · 나라공원 진입', ja:'近鉄奈良駅 → 奈良公園(나라코엔 · Nara Park)',
+   what:'긴테쓰나라역 2번 출구 → 히가시무키 상점가에서 점심 → 동쪽으로 5분이면 공원.',
+   why:'60분.', lat:34.6841,lng:135.8283,h:90, q:'近鉄奈良駅 2番出口', tags:['도보 5분']},
+  {k:'p', t:'13:00', st:'user', name:'사슴 · 공원 풍경', ja:'奈良公園 · 春日野園地',
+   what:'사슴 1,200마리가 그냥 돌아다님. 사슴 전병(鹿せんべい 200엔) 사면 둘러싸임.',
+   why:'60분. 사슴이 어디 있을지는 그날 사슴 마음.', lat:34.6850,lng:135.8390,h:0, q:'奈良公園 春日野園地', tags:['무료']},
+  {k:'p', t:'14:00', st:'user', name:'도다이지 대불전', ja:'東大寺 大仏殿(도다이지 다이부츠덴 · Todai-ji)',
+   what:'세계 최대급 목조 건물 안에 15m 청동 대불. 기둥 구멍 통과하는 줄도 있음.',
+   why:'60분.', lat:34.6890,lng:135.8398,h:0, q:'東大寺 大仏殿', tags:['11월 7:30–17:00','800엔']},
+  {k:'p', t:'15:00', st:'user', name:'니가쓰도', ja:'二月堂(니가츠도 · Nigatsu-do)',
+   what:'대불전에서 동쪽 언덕으로 10분. 돌계단·회랑 올라가면 나라 시내 전망. 무료, 24시간.',
+   why:'60분 (오가는 길 포함). 여기서 보는 노을 좋음.', lat:34.6893,lng:135.8440,h:270, q:'東大寺二月堂', tags:['무료','도보 10분 오르막']},
+  {k:'p', t:'16:00', st:'user', name:'나라마치', ja:'ならまち(나라마치 · Naramachi)',
+   what:'에도시대 상가(마치야)가 남은 골목. 격자집(ならまち格子の家) 무료 개방, 작은 카페·공방.',
+   why:'역 방향으로 돌아오며 90분. 17:30 역 출발.', lat:34.6775,lng:135.8300,h:0, q:'ならまち格子の家', tags:['도보 20분','무료']},
+  {k:'l', t:'17:30', st:'est', from:'나라', to:'숙소', q1:'近鉄奈良駅', q2:HOME.q,
+   steps:[['🚶','나라마치 → 긴테쓰나라역','','15분',''],['🚃','긴테쓰 급행 교토행 · 긴테쓰나라 → 긴테쓰교토','Suica OK','약 45분','760엔'],['🚇','가라스마선 · 교토 → 기타오지','','15분','260엔'],['🚕','기타오지역 → 소라쿠안','','10분','약 1,500엔']],
+   total:'약 1시간 40분', note:'19:30 전후 도착.'}
+]},
+
+{ id:'d1104', d:'11/4', w:'수', title:'고베 · 오사카, 공간 보러', city:'교토 → 고베 → 오사카 → 교토', home:'20:00 숙소 (18:00 호리에 출발)', items:[
+  {k:'l', t:'08:00', st:'est', from:'숙소', to:'고베 산노미야', q1:HOME.q, q2:'三ノ宮駅',
+   steps:[['🚕','소라쿠안 → 지하철 기타오지역','','10분','약 1,500엔'],['🚇','가라스마선 · 기타오지 → 교토','','15분','260엔'],['🚃','JR 신쾌속(新快速 · Special Rapid) 히메지(姫路)행 · 교토 → 산노미야(三ノ宮 · Sannomiya)','교토역 JR 개찰 → 4·5번 승강장. 오사카 지나서 계속 타면 됨','약 52분','1,110엔']],
+   total:'약 1시간 40분 · Suica OK', alt:'택시 직행 교토역 30분 약 3,500엔 (아침이면 시간 비슷)'},
+  {k:'p', t:'10:00', st:'user', name:'NO STANDARD', ja:'ノースタンダード · 三宮 国際会館 SOL B2F',
+   what:'디자인 생활소품 편집숍. 산노미야역에서 도보 5분, 국제회관 지하 2층.',
+   why:'10시 개점 맞춰 첫 방문. 45분.', lat:34.6926,lng:135.1968,h:0, q:'NO STANDARD 神戸 国際会館',
+   tags:['10:00–20:00','神戸市中央区御幸通8-1-6 B2F']},
+  {k:'p', t:'11:00', st:'user', name:'Edition 고베', ja:'エディション 神戸BAL ANNEX',
+   what:'질샌더·마르지엘라·아크네·HYKE 같은 미니멀 옷 편집숍. 옷보다 진열·실내 보러.',
+   why:'NO STANDARD에서 도보 7분. 45분.', lat:34.6905,lng:135.1900,h:0, q:'神戸BAL',
+   tags:['11:00–20:00','BAL 별관']},
+  {k:'p', t:'11:45', st:'user', name:'BAL 3층 · 간단 점심', ja:'Madu · TODAY’S SPECIAL (神戸BAL 本館 3F)',
+   what:'같은 건물 본관 3층에 그릇·식탁 소품 가게 둘(Madu, TODAY’S SPECIAL). 비슷하면 한 곳만. 점심은 BAL 안이나 바로 옆.',
+   why:'이동 0분. 45분 안에 끝.', q:'神戸BAL 3F Madu', approx:true,
+   tags:['11:00–20:00','12:30 출발 엄수']},
+  {k:'l', t:'12:30', st:'est', from:'산노미야', to:'오사카 나카노시마', q1:'三ノ宮駅', q2:'graf studio 中之島',
+   steps:[['🚶','BAL → JR 산노미야역','','7분',''],['🚃','JR 신쾌속 교토행 · 산노미야 → 오사카(大阪 · Osaka)','','약 21분','420엔'],['🚶','오사카역 → graf (나카노시마 강변)','사쿠라바시 출구 → 남쪽으로 강 건너','약 15분','']],
+   total:'약 45분 · Suica OK', alt:'오사카역에서 택시 7분 약 1,000엔'},
+  {k:'p', t:'13:45', st:'user', name:'graf studio', ja:'グラフ(그라프 · graf) · 中之島(나카노시마)',
+   what:'오사카 디자인팀 graf의 가구·생활도구 매장 + 키친. 강변 건물 자체가 볼거리. 2층은 전시 때만.',
+   why:'45분.', q:'graf studio 大阪 中之島4-1-9', approx:true,
+   tags:['10:30–18:00 · 월요일 휴무','大阪市北区中之島4-1-9']},
+  {k:'l', t:'14:30', st:'est', from:'나카노시마', to:'미나미센바', q1:'graf studio 中之島', q2:'wad omotenashi cafe',
+   steps:[['🚶','graf → 지하철 히고바시(肥後橋)역','','7분',''],['🚇','요츠바시선(四つ橋線) 스미노에코엔행 · 히고바시 → 요츠바시(四ツ橋 · Yotsubashi)','','약 5분','190엔'],['🚶','요츠바시 → wad','미나미센바 동쪽으로','약 8분','']],
+   total:'약 25분 · Suica OK', alt:'택시 10분 약 1,200엔'},
+  {k:'p', t:'15:00', st:'user', name:'wad', ja:'wad omotenashi cafe(와도) · 南船場(미나미센바)',
+   what:'작가 그릇에 차를 내주는 카페. 그릇 고르는 것부터가 경험. 위층 갤러리는 전시 때만.',
+   why:'50분. 예약 불가·현금.', q:'wad omotenashi cafe 南船場', approx:true,
+   tags:['비정기 휴무 · 당일 인스타 확인','현금']},
+  {k:'p', t:'16:20', st:'user', name:'BIOTOP OSAKA', ja:'ビオトープ 大阪 · 南堀江(미나미호리에)',
+   what:'옷+식물+카페가 한 건물. SUPPOSE DESIGN OFFICE 설계. 옥상 식물 코너까지.',
+   why:'wad에서 서쪽으로 도보 15~20분. 90분. 18:00 출발.', lat:34.6715,lng:135.4935,h:0, q:'BIOTOP OSAKA',
+   tags:['의류 11:00–20:00','大阪市西区南堀江1-16-1']},
+  {k:'l', t:'18:00', st:'est', from:'호리에', to:'숙소', q1:'BIOTOP OSAKA', q2:HOME.q,
+   steps:[['🚶','BIOTOP → 지하철 요츠바시역','','8분',''],['🚇','요츠바시선 니시우메다(西梅田)행 · 요츠바시 → 니시우메다','종점','약 8분','240엔'],['🚶','니시우메다 → JR 오사카역','지하 연결, 표지 "JR大阪駅"','7분',''],['🚃','JR 신쾌속 교토행 · 오사카 → 교토','','약 29분','580엔'],['🚇','가라스마선 · 교토 → 기타오지','','15분','260엔'],['🚕','기타오지역 → 소라쿠안','','10분','약 1,500엔']],
+   total:'약 1시간 50분 · Suica OK', note:'20:00 전후 도착. 빡세면 wad나 BAL 3층 하나 건너뛰기.'}
+]},
+
+{ id:'d1105', d:'11/5', w:'목', title:'귀국', city:'교토 → 간사이공항', home:'', flight:true, items:[
+  {k:'l', t:'', st:'est', from:'숙소', to:'교토역', q1:HOME.q, q2:'京都駅',
+   steps:[['🚕','소라쿠안 → 교토역 (캐리어 있으니 직행)','아침 혼잡 감안 40분 잡기','약 30분','약 3,500엔']],
+   total:'약 30~40분', alt:'택시 → 기타오지역 + 지하철 15분 (캐리어 끌 각오면 1,760엔)'},
+  {k:'l', t:'', st:'est', from:'교토역', to:'간사이공항 T1', q1:'京都駅', q2:'関西空港駅',
+   steps:[['🚄','특급 하루카 간사이공항행','10/31에 산 돌아오는 표. 지정석 시각 표에 적힌 대로','약 75분','표']],
+   total:'약 1시간 15분'},
+  {k:'p', t:'', st:'user', name:'간사이공항 출국', ja:'関西国際空港 T1',
+   what:'하루카 내려서 연결통로 7분 → T1 4층 출발층. 국제선은 출발 2시간 전 도착.',
+   why:'Suica 잔액은 편의점에서 털거나 다음 여행용으로 두면 됨.', lat:34.4347,lng:135.2440,h:200, q:'関西国際空港 第1ターミナル', tags:['항공편 시각 입력하면 위 시간 자동 계산']}
+]}
+];
+
+/* ============ 상태 저장 ============ */
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+let marks = LS.get('kyoto.marks',{});
+let flight = LS.get('kyoto.flight','');
+
+/* ============ 렌더 ============ */
+const STATUS = { user:['내가 정한 시간',''], tt:['공식 시간표','ok'], est:['예상 · 현장 확인','v'], v:['확인 필요','v'] };
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function jpNow(){ // 일본 시간 = 한국 시간
+  const n=new Date(); return {m:n.getMonth()+1,d:n.getDate(),hm:n.getHours()*60+n.getMinutes()};
+}
+function dayIndexForToday(){
+  const {m,d}=jpNow(); const key=m+'/'+d;
+  const i=DAYS.findIndex(x=>x.d===key); return i<0?0:i;
+}
+let cur = LS.get('kyoto.day', null);
+if(cur==null || !DAYS.some(x=>x.id===cur)) cur = DAYS[dayIndexForToday()].id;
+
+function render(){
+  const tabs=document.getElementById('tabs');
+  tabs.innerHTML = DAYS.map(x=>`<button class="tab ${x.id===cur?'on':''}" data-id="${x.id}" aria-pressed="${x.id===cur}"><b>${x.d}</b><span>${x.w} · ${esc(x.title.split(' · ')[0])}</span></button>`).join('');
+  tabs.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('kyoto.day',cur);render();window.scrollTo(0,0);});
+  const day=DAYS.find(x=>x.id===cur);
+  const main=document.getElementById('main');
+  const nv=day.items.filter(i=>i.st==='v'||i.st==='est').length;
+  let html=`<div class="day-head"><h2>${esc(day.title)}</h2><span class="city">${esc(day.city)}</span></div>
+  <div class="chips">${day.home?`<span class="chip home">🏠 ${esc(day.home)}</span>`:''}<span class="chip">${day.items.filter(i=>i.k==='p').length}곳</span>${nv?`<span class="chip warn">현장 확인 ${nv}건</span>`:''}</div>`;
+  if(day.flight) html+=calcHTML();
+  html+='<div class="tl">'+day.items.map((it,idx)=>it.k==='p'?placeHTML(day,it,idx):legHTML(day,it,idx)).join('')+'</div>';
+  main.innerHTML=html;
+  bind(day);
+  loadFrames();
+  document.getElementById('today').textContent = (()=>{const {m,d}=jpNow();return `오늘 ${m}/${d} · 일본시간=한국시간`;})();
+}
+function markOf(day,idx){ return marks[day.id+':'+idx]||''; }
+const HOSTED = /claude|artifact/.test(location.hostname);
+function placeHTML(day,it,idx){
+  const mk=markOf(day,idx); const [sl,sc]=STATUS[it.st]||STATUS.est;
+  const frame = HOSTED
+    ? `<div class="svb"><a class="btn pri" target="_blank" rel="noopener" href="${it.lat?`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${it.lat},${it.lng}`:gmap(it.q||it.name)}">👀 ${it.lat&&!it.approx?'로드뷰 보기 (구글맵 앱으로 열림)':'지도에서 위치 보기'}</a></div>`
+    : (it.lat&&!it.approx)
+    ? `<div class="sv"><iframe title="로드뷰 ${esc(it.name)}" data-src="${svurl(it.lat,it.lng,it.h||0)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="ph">로드뷰 불러오는 중…</div></div>`
+    : `<div class="sv"><iframe title="지도 ${esc(it.name)}" data-src="${mapurl(it.q)}" loading="lazy"></iframe><div class="ph">지도 불러오는 중…</div></div>`;
+  return `<div class="item ${mk}" data-idx="${idx}">
+    <div class="t"><b class="num">${esc(it.t)}</b>${it.approx?'위치 근사':''}</div><div class="dot"></div>
+    <div class="card">
+      <div class="hd"><h3 class="name">${esc(it.name)}</h3><div class="ja">${esc(it.ja)}</div>
+        ${it.what?`<p class="what">${esc(it.what)}</p>`:''}${it.why?`<p class="why">${esc(it.why)}</p>`:''}</div>
+      <div class="meta"><span class="tag ${sc}">${sl}</span>${(it.tags||[]).map(t=>`<span class="tag ${/엔|무료|표$/.test(t)?'money':''}">${esc(t)}</span>`).join('')}</div>
+      ${it.todo?`<div class="todo"><b>할 일</b>${it.todo.map(t=>'· '+esc(t)).join('<br>')}</div>`:''}
+      ${frame}
+      <div class="acts">
+        <a class="btn" target="_blank" rel="noopener" href="${gmap(it.q||it.name)}">📍 지도 열기</a>
+        ${it.lat?`<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${it.lat},${it.lng}">👀 로드뷰 크게</a>`:''}
+        <button class="btn chk" data-m="done">✓ 다녀옴</button><button class="btn skp sm" data-m="skip">건너뜀</button>
+      </div>
+    </div></div>`;
+}
+function legHTML(day,it,idx){
+  const mk=markOf(day,idx); const [sl,sc]=STATUS[it.st]||STATUS.est;
+  return `<div class="item leg ${mk}" data-idx="${idx}">
+    <div class="t"><b class="num">${esc(it.t)}</b>이동</div><div class="dot"></div>
+    <div class="card">
+      <div class="route">${esc(it.from)} <span>→</span> ${esc(it.to)}</div>
+      <ul class="steps">${it.steps.map(s=>`<li><span class="ic">${s[0]}</span><span class="s">${esc(s[1])}${s[2]?`<small>${esc(s[2])}</small>`:''}</span><span class="r num"><b>${esc(s[3])}</b>${esc(s[4])}</span></li>`).join('')}</ul>
+      <div class="sum"><span>합계</span><b>${esc(it.total||'')}</b></div>
+      <div class="meta"><span class="tag ${sc}">${sl}</span>${/Suica OK/.test(it.total||'')?'<span class="tag ok">Suica 찍고 타면 됨</span>':''}</div>
+      ${it.alt?`<p class="note">대안: ${esc(it.alt)}</p>`:''}${it.note?`<p class="note">${esc(it.note)}</p>`:''}
+      <div class="acts"><a class="btn pri" target="_blank" rel="noopener" href="${gdir(it.q1,it.q2)}">🧭 구글맵 길찾기</a><button class="btn chk sm" data-m="done">✓</button></div>
+    </div></div>`;
+}
+function bind(day){
+  document.querySelectorAll('.item [data-m]').forEach(b=>b.onclick=()=>{
+    const idx=b.closest('.item').dataset.idx, key=day.id+':'+idx, m=b.dataset.m;
+    marks[key] = marks[key]===m ? '' : m; LS.set('kyoto.marks',marks); render();
+  });
+  const f=document.getElementById('flight'); if(f){ f.oninput=()=>{flight=f.value;LS.set('kyoto.flight',flight);document.getElementById('calcOut').innerHTML=calcRows();}; }
+}
+function loadFrames(){ document.querySelectorAll('iframe[data-src]').forEach(fr=>{ fr.src=fr.dataset.src; fr.removeAttribute('data-src'); }); }
+
+/* 귀국 역산 */
+function calcHTML(){ return `<div class="calc"><label for="flight">귀국 항공편 출발 시각 (현지)</label><input id="flight" type="time" value="${esc(flight)}"><div id="calcOut">${calcRows()}</div><p class="hint">공항 도착 = 출발 2시간 전 · 하루카 75분 · 교토역 여유 20분 · 숙소→교토역 택시 40분. 하루카 표는 10/31에 이 시각 맞춰 끊어두기.</p></div>`; }
+function calcRows(){
+  if(!flight) return '<table><tr><td>시각을 넣으면 출발 시간이 나와</td><td>—</td></tr></table>';
+  const [h,m]=flight.split(':').map(Number); let t=h*60+m;
+  const f=x=>{x=((x%1440)+1440)%1440;return String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');};
+  const rows=[['공항 도착(출발 2시간 전)',t-120],['하루카 교토역 출발',t-120-75],['교토역 도착 목표',t-120-75-20],['숙소 체크아웃 · 택시',t-120-75-20-40]];
+  return '<table>'+rows.map(r=>`<tr><td>${r[0]}</td><td class="num">${f(r[1])}</td></tr>`).join('')+'</table>';
+}
+
+/* ============ 시트 ============ */
+const sheet=document.getElementById('sheet'), pn=document.getElementById('pn');
+function openSheet(html){ pn.innerHTML=html+'<button class="btn close" id="cl">닫기</button>'; sheet.hidden=false; document.getElementById('cl').onclick=()=>sheet.hidden=true; }
+sheet.onclick=e=>{ if(e.target===sheet) sheet.hidden=true; };
+document.getElementById('bHome').href=gdir('현재 위치',HOME.q);
+document.getElementById('bKit').onclick=()=>openSheet(`<h3>교통 한 장 정리</h3>
+<div class="kv"><b>🐧 Suica (아이폰 지갑) — 거의 전부</b>교토 지하철·시버스·교토버스·한큐·게이한, JR 신쾌속, 긴테쓰 급행, 오사카 메트로, 고베, 편의점. 잠금 안 풀고 폰 윗부분만 대면 열림.<small>잔액 떨어지면 지갑 앱 → Suica → 충전 (현대카드). 버스는 탈 때+내릴 때 둘 다.</small></div>
+<div class="kv"><b>🎫 표가 필요한 건 딱 2개</b>① 하루카 (공항↔교토, 10/31 공항 JR 매표소에서 왕복) ② 특급 하시다테 (니조↔아마노하시다테, 10/31 교토역 창구에서 왕복 지정석)<small>특급은 Suica로 못 탐. 긴테쓰 "특급"도 마찬가지 → 나라는 급행으로.</small></div>
+<div class="kv"><b>💴 현금 쓰는 곳</b>이네 단카이버스 400엔×2 · 한나리런 1,000엔 · wad(현금) · 귀청소(확인) · 사슴 전병<small>3만 엔 정도 환전.</small></div>
+<div class="kv"><b>🚕 택시</b>GO 앱(일본 택시앱, 카드 등록) 또는 역 앞 승강장. 뒷문 자동. 주소는 폰 화면으로 보여주기.<small>숙소: 京都市北区鷹峯千束町2-5</small></div>
+<div class="kv"><b>🧭 길</b>모든 이동 카드의 "구글맵 길찾기"가 현재 위치 기준 환승까지 다 보여줌. 정류장 이름은 한글·일본어 둘 다 적어둠.</div>`);
+document.getElementById('bSay').onclick=()=>openSheet(`<h3>한마디 (보여줘도 됨)</h3><div class="ph2">
+${[['택시: 여기로 가주세요','ここまでお願いします','코코마데 오네가이시마스'],
+['이 주소요','この住所です','코노 쥬-쇼데스'],
+['하루카 왕복, 교토까지. 오늘이랑 11월 5일','はるかの往復、京都まで。今日と11月5日','하루카노 오-후쿠, 쿄-토마데. 쿄-토 쥬-이치가츠 이츠카'],
+['11월 2일, 니조에서 아마노하시다테 왕복 지정석','11月2日、二条から天橋立まで往復、指定席で','쥬-이치가츠 후츠카, 니죠-카라 아마노하시다테마데 오-후쿠, 시테-세키데'],
+['짐 하나 맡길게요 (저녁에 찾아요)','荷物を一つ預けます。夕方取りに来ます','니모츠오 히토츠 아즈케마스. 유-가타 토리니 키마스'],
+['예약한 ○○입니다','予約した○○です','요야쿠시타 ○○데스'],
+['3km, 사전 신청했어요','3キロ、事前申込しました','산키로, 지젠 모-시코미 시마시타'],
+['추천 메뉴로 주세요','おすすめでお願いします','오스스메데 오네가이시마스'],
+['사진 찍어도 돼요?','写真撮ってもいいですか','샤신 톳테모 이이데스카'],
+['Suica 돼요?','Suica使えますか','스이카 츠카에마스카']].map(p=>`<div class="kv"><b>${p[0]}</b><span class="jp">${p[1]}</span><br><span class="ro">${p[2]}</span></div>`).join('')}</div>`);
+
+render();
+</script>
+</body>
+</html>
