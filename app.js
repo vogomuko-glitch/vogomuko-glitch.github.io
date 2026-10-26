@@ -170,11 +170,12 @@ function cardHTML(day,s,k){
     const src=s.v?svurl(s.v.lat,s.v.lng,s.v.h||0):mapurl(s.q||s.a);
     view=`<div class="cv"><div class="ph">${s.v?'로드뷰':'지도'}</div><iframe title="장면" data-src="${src}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${s.v?esc(s.v.cap||''):'지도 · '+esc(s.q||'')}</span></div>`;
   } else view=`<div class="cv flat"><a class="big" target="_blank" rel="noopener" href="${s.v?pano(s.v.lat,s.v.lng):gmap(s.q||s.a)}">${ms(s.v?'streetview':'map')} ${s.v?'로드뷰 열기':'지도 열기'}</a></div>`;
-  const meta=[(s.t&&!s.place)?`<b class="num">${esc(s.t)}</b>`:'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join('<i>·</i>');
+  const meta=[s.stops?esc(s.stops):'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join('<i>·</i>');
+  const nodes=s.on||s.off?`<div class="nodes">${s.on?`<div class="nd on"><i></i><span>${esc(s.on)}</span></div>`:''}${s.off?`<div class="nd off"><i></i><span>${esc(s.off)}</span></div>`:''}</div>`:'';
   return `<section class="rc ${s.place?'isplace':''}" id="s${k}" data-k="${k}">
     ${s.place?`<h3 class="stop">${esc(s.place)}${s.t?`<small class="num">${esc(s.t)}</small>`:''}</h3>`:''}
-    <div class="rh">${ms(ti)}${s.line?`<span class="line">${esc(s.line)}</span>`:''}<span class="ty">${tn}</span><span class="rm">${meta}</span><span class="pg num">${k+1}</span></div>
-    ${s.off?`<div class="off">${ms('logout','s')}${esc(s.off)}${s.stops?` <span class="dim">· ${esc(s.stops)}</span>`:''}</div>`:''}
+    <div class="rh">${ms(ti)}${s.line?`<span class="line">${esc(s.line)}</span>`:''}<span class="ty">${tn}${(!s.line&&s.dur)?' '+esc(s.dur):''}</span>${s.line?`<span class="rm">${meta}</span>`:(s.fare?`<span class="rm">${esc(s.fare)}</span>`:'')}<span class="tm num">${(s.t&&!s.place)?esc(s.t):''}</span><span class="pg num">${k+1}</span></div>
+    ${nodes}
     ${view}
     <h2 class="ra">${esc(s.a)}</h2>
     ${s.b?`<p class="rb">${ms('visibility','s')}${esc(s.b)}</p>`:''}
@@ -192,7 +193,12 @@ function renderCards(day){
   const anchors=steps.map((st,k)=>st.place?k:-1).filter(k=>k>=0);
   const rail=`<aside class="rail" aria-label="오늘 장소">${anchors.map((k,ai)=>`<button class="rd" data-k="${k}"><b></b><span>${esc(steps[k].place)}</span></button>${ai<anchors.length-1?`<i class="seg" data-ai="${ai}"></i>`:''}`).join('')}</aside>`;
   document.body.classList.add('cards');
-  $('#main').innerHTML=`<div class="rw">${rail}<div class="col"><div class="ctx" id="ctx"></div>${steps.map((s,k)=>cardHTML(day,s,k)).join('')}<p class="end">오늘 끝 · ${n}장</p></div></div>`;
+  const mins=x=>{if(!x)return 0;let m=0;const h=/(\d+)\s*시간/.exec(x);if(h)m+=+h[1]*60;const mm=/(\d+)\s*분/.exec(x);if(mm)m+=+mm[1];return m;};
+  const fmt=m=>m>=60?`${Math.floor(m/60)}시간${m%60?' '+m%60+'분':''}`:`${m}분`;
+  const walk=steps.filter(x=>x.type==='walk').reduce((a,x)=>a+mins(x.dur),0), move=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>a+mins(x.dur),0);
+  const fare=steps.reduce((a,x)=>{const m=/([\d,]+)\s*엔/.exec(x.fare||'');return a+(m?+m[1].replace(/,/g,''):0);},0);
+  const summ=`<div class="dsum"><span><b>${fmt(move+walk)}</b> 이동</span><span>도보 <b>${fmt(walk)}</b></span>${fare?`<span>교통비 약 <b>${fare.toLocaleString()}엔</b></span>`:''}</div>`;
+  $('#main').innerHTML=`<div class="rw">${rail}<div class="col"><div class="ctx" id="ctx"></div>${summ}${steps.map((s,k)=>cardHTML(day,s,k)).join('')}<p class="end">오늘 끝 · ${n}장</p></div></div>`;
   renderBar();
   // 지금 위치 표시
   const setNow=k=>{
