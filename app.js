@@ -80,7 +80,13 @@ function newTripSheet(){
 function now(){ const n=new Date(); return {key:(n.getMonth()+1)+'/'+n.getDate(),hm:n.getHours()*60+n.getMinutes()}; }
 function todayIndex(){ const k=now().key; const i=TRIP.days.findIndex(d=>d.d===k); return i<0?0:i; }
 let mode=LS.get('trip.mode','cards'); // cards=리허설(기본) / list=전체 보기
-const TYPE={walk:['걷기','directions_walk'],ride:['타기','directions_bus'],taxi:['택시','local_taxi'],buy:['사기·맡기기','confirmation_number'],see:['보기','visibility'],do:['하기','task_alt'],arrive:['도착','flag']};
+const TYPE={walk:['도보','directions_walk'],ride:['탑승','directions_bus'],taxi:['택시','local_taxi'],buy:['창구','confirmation_number'],see:['관람','visibility'],do:['할 일','task_alt'],arrive:['도착','flag']};
+const RIDE={directions_bus:'버스',subway:'지하철',train:'열차',tram:'전철',directions_boat:'배'};
+function stepLabel(s){ // 한국 앱에서 익숙한 말로
+  if(s.label) return [s.label,(TYPE[s.type]||TYPE.do)[1]];
+  if(s.type==='ride'){ const m=/(バス|버스)/.test(s.a)?'directions_bus':/(지하철|가라스마선|요츠바시線|요츠바시선|四つ橋|肥後橋)/.test(s.a)?'subway':/(하루카|하시다테|新快速|신쾌속|긴테쓰|急行|JR)/.test(s.a)?'train':'directions_bus'; return [RIDE[m],m]; }
+  return TYPE[s.type]||TYPE.do;
+}
 function renderTrip(){
   const tk=now().key;
   $('#top').innerHTML=`<div class="top-row"><a class="ib" href="#" aria-label="여행 목록">${ms('arrow_back')}</a><h1>${esc(TRIP.title)}</h1><button class="ib r" id="bMode" aria-label="보기 전환">${ms(mode==='cards'?'view_list':'view_carousel')}</button><button class="ib r" id="bInfo" aria-label="정보">${ms('info')}</button></div>
@@ -158,16 +164,16 @@ function calcRows(){
 /* ---------- 리허설: 세로로 쭉, 왼쪽 점이 스크롤 따라 움직임 ---------- */
 let stepIdx=LS.get('trip.step',{});
 function cardHTML(day,s,k){
-  const [tn,ti]=TYPE[s.type]||TYPE.do; const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
+  const [tn,ti]=stepLabel(s); const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
   let view;
   if(CAN_EMBED){
     const src=s.v?svurl(s.v.lat,s.v.lng,s.v.h||0):mapurl(s.q||s.a);
     view=`<div class="cv"><div class="ph">${s.v?'로드뷰':'지도'}</div><iframe title="장면" data-src="${src}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${s.v?esc(s.v.cap||''):'지도 · '+esc(s.q||'')}</span></div>`;
   } else view=`<div class="cv flat"><a class="big" target="_blank" rel="noopener" href="${s.v?pano(s.v.lat,s.v.lng):gmap(s.q||s.a)}">${ms(s.v?'streetview':'map')} ${s.v?'로드뷰 열기':'지도 열기'}</a></div>`;
-  const meta=[s.t?`<b class="num">${esc(s.t)}</b>`:'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join('<i>·</i>');
+  const meta=[(s.t&&!s.place)?`<b class="num">${esc(s.t)}</b>`:'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join('<i>·</i>');
   return `<section class="rc ${s.place?'isplace':''}" id="s${k}" data-k="${k}">
-    ${s.place?`<div class="pl">${ms('location_on','s')}${esc(s.place)}</div>`:''}
-    <div class="rh"><span class="ty">${ms(ti)}${tn}</span><span class="rm">${meta}</span><span class="pg num">${k+1}</span></div>
+    ${s.place?`<h3 class="stop">${esc(s.place)}${s.t?`<small class="num">${esc(s.t)}</small>`:''}</h3>`:''}
+    <div class="rh">${ms(ti)}<span class="ty">${tn}</span><span class="rm">${meta}</span><span class="pg num">${k+1}</span></div>
     ${view}
     <h2 class="ra">${esc(s.a)}</h2>
     ${s.b?`<p class="rb">${ms('visibility','s')}${esc(s.b)}</p>`:''}

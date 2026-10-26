@@ -176,9 +176,9 @@ html.icons .ms{visibility:visible}
 
 /* 리허설 카드: 사진 한 컷 + 한 줄 */
 .rc{padding:12px 0 0}
-.rh{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);padding:2px 0 10px}
-.rh .ty{display:inline-flex;align-items:center;gap:4px;color:var(--ink);font-weight:600;font-size:14px;border:1px solid var(--ink);padding:3px 9px 3px 6px}
-.rh .ty .ms{font-size:18px}
+.rh{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink2);padding:0 0 10px}
+.rh>.ms{font-size:20px;color:var(--ink)}
+.rh .ty{color:var(--ink);font-weight:600;font-size:14px;margin-right:4px}
 .rh .rm b{color:var(--ink);font-weight:600}
 .rh .rm i{font-style:normal;margin:0 6px;color:var(--ink3)}
 .rh .pg{margin-left:auto;color:var(--ink3)}
@@ -232,7 +232,9 @@ body.cards{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .ctx .pgc{margin-left:auto;color:var(--ink3);font-size:12.5px}
 .rc{padding:18px 0 22px;border-bottom:1px solid var(--line)}
 .rc.isplace{padding-top:22px}
-.rc .pl{display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:700;color:var(--ink);border:1px solid var(--ink);padding:2px 8px 2px 4px;margin-bottom:10px}
+.rc.isplace{border-top:2px solid var(--ink);margin-top:6px}
+.stop{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 12px;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.stop small{font-size:13px;font-weight:500;color:var(--ink2)}
 .rh{padding-top:0}
 .end{text-align:center;color:var(--ink3);font-size:13px;padding:24px 0 10px}
 .rail{top:calc(var(--hdr) + env(safe-area-inset-top,0px) - 34px)}
