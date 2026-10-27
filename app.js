@@ -349,6 +349,7 @@ sheet.onclick=e=>{ if(e.target===sheet) sheet.hidden=true; };
 
 (document.fonts?document.fonts.load('300 24px "Material Symbols Outlined"'):Promise.resolve()).then(()=>document.documentElement.classList.add('icons')).catch(()=>document.documentElement.classList.add('icons'));
 setTimeout(()=>document.documentElement.classList.add('icons'),4000);
+(function(){ const b=document.createElement('button'); b.id='toTop'; b.className='totop'; b.setAttribute('aria-label','맨 위로'); b.innerHTML=ms('arrow_upward'); b.hidden=true; document.body.appendChild(b); b.onclick=()=>window.scrollTo({top:0,behavior:'smooth'}); window.addEventListener('scroll',()=>{ b.hidden=window.scrollY<400; },{passive:true}); })();
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js?v='+(window.__V__||'0')).catch(()=>{});
 boot().catch(e=>{ $('#main').innerHTML=`<p style="padding:40px 0;color:var(--ink2)">데이터를 못 불러왔어. 새로고침 해봐.<br><small>${esc(e.message)}</small></p>`; });
 })();
