@@ -234,7 +234,7 @@ function renderCards(day){
   const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x||'');return m?+m[1]*60+ +m[2]:null;}, f2=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
   const dl=(day.ret&&day.target)?`<div class="line3">${ms('wb_twilight','s')}해 짐 ${esc(day.sunset||'17:00')} · <b>${esc(day.target)}</b> 귀가하려면 마지막 장소 <b>${f2(hm(day.target)-day.ret)}</b> 출발${day.max?` · 최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발`:''}${day.dlNote?`<span class="dim"> · ${esc(day.dlNote)}</span>`:''}</div>`:'';
   const lastT=[...steps].reverse().find(x=>x.t); const endT=day.home?day.home.replace(/\s*숙소.*$/,''):(lastT?lastT.t:''); const endL=day.home?'숙소 도착':(lastT&&lastT.place?lastT.place+' 도착':'');
-  const summ=`<div class="dsum"><div class="big"><b class="num">${esc((steps.find(x=>x.t)||{}).t||'')} → ${esc(endT)}</b><span>${esc(endL)}</span></div><div class="line2">${fare?`교통비 약 ${fare.toLocaleString()}엔 (사전 구매 표 포함)`:''}</div>${modes}${dl}</div>`;
+  const summ=`<div class="dsum"><div class="big"><b class="num">${esc((steps.find(x=>x.t)||{}).t||'')} → ${esc(endT)}</b><span>${esc(endL)}</span></div><div class="line2">${fare?`교통비 약 ${fare.toLocaleString()}엔 (사전 구매 표 포함)`:''}</div>${dl}</div>`;
   // 이동 줄 길찾기 목적지 보강: 다음 장소(q) 기준
   steps.forEach((st,k)=>{ if(/^(walk|taxi)$/.test(st.type)&&!st.q2){ const nx=steps.slice(k+1).find(x=>x.q||x.v||x.onName); st.q1=st.q1||'현재 위치'; st.q2=st.q||(nx?(nx.v?nx.v.lat+','+nx.v.lng:(nx.q||nx.onName)):TRIP.home.q); } if(st.type==='ride'&&!st.q2){ st.q1=st.q1||st.onName||'현재 위치'; st.q2=st.offName||TRIP.home.q; } });
   const lastPlaceAi=(()=>{ let r=-1; anchors.forEach((k,ai)=>{ if(steps[k].place!=='숙소') r=ai; }); return r; })();
@@ -280,10 +280,21 @@ function clearShell(){ document.body.classList.remove('cards'); window.onscroll=
 function renderCover(){
   clearShell();
   $('#top').innerHTML='';
-  const c=TRIP.cover||{title:TRIP.title,sub:TRIP.dates};
-  $('#main').innerHTML=`<section class="cover"><h1 class="ct">${esc(c.title)}</h1><div class="cs num">${esc(c.sub||'')}</div>
-    <div class="bars">${TRIP.days.map(d=>`<button class="cbar" data-id="${d.id}" style="--dc:${esc(d.color||'#000')}" aria-label="${esc(d.d)} ${esc(d.title)}"></button>`).join('')}</div></section>`;
-  document.querySelectorAll('.cbar').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);setView('days');});
+  const c=TRIP.cover||{}; const W={'토':'SAT','일':'SUN','월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI'};
+  const pill=(d,i)=>{ const date=d.d.replace('/','.').replace(/^(\d)\./,'$1.').replace(/^(\d{2})\.(\d)$/,'$1.0$2'); const wk=W[(d.w||'').slice(0,1)]||'';
+    return `<article class="jday" style="--color:${esc(d.color)};--text:${esc(d.text||'#171717')}"><button class="jt" data-i="${i}" aria-expanded="false"><span class="jd">${date} <span class="jw">${wk}</span></span><span></span><span class="jsign">+</span></button>
+      <div class="jr"><div class="jri"><ol class="jpl">${(d.coverPlaces||[]).map(p=>`<li><span class="jen">${esc(p[0])}</span><div class="jloc"><span lang="ja">${esc(p[1])}</span><span>${esc(p[2])}</span></div></li>`).join('')}</ol>
+      <div class="jfoot"><button class="jgo" data-id="${d.id}">${esc(d.d)} 일정 보기 ↗</button><button class="jclose">접기 ↑</button></div></div></div></article>`; };
+  const ex=c.extra?`<article class="jday" style="--color:${esc(c.extra.color)};--text:${esc(c.extra.text||'#fff')}"><div class="jt static"><span class="jd">${esc(c.extra.date)} <span class="jw">${esc(c.extra.week)}</span></span><span class="jcity">${esc(c.extra.city)}</span><span></span></div></article>`:'';
+  $('#main').innerHTML=`<section class="journal"><header class="mast"><span>${esc((c.masthead||[])[0]||'')}</span><span>${esc((c.masthead||[])[1]||'')}</span></header>
+    <div class="hero"><h1 class="ct">${esc(c.title||TRIP.title)}</h1></div><div class="jspace"></div>
+    <div class="jdays">${TRIP.days.map(pill).join('')}${ex}</div>
+    <footer class="jfooter"><span>${esc(c.footer||'')}</span></footer></section>`;
+  const cards=[...document.querySelectorAll('.jday')];
+  const setDay=(idx,open)=>{ cards.forEach((cd,i)=>{ const on=i===idx&&open; cd.classList.toggle('open',on); const sg=cd.querySelector('.jsign'); if(sg) sg.textContent=on?'−':'+'; const bt=cd.querySelector('.jt'); if(bt) bt.setAttribute('aria-expanded',String(on)); }); $('.journal').classList.toggle('has-open',open); };
+  document.querySelectorAll('.jt:not(.static)').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; setDay(i,!cards[i].classList.contains('open')); });
+  document.querySelectorAll('.jclose').forEach(b=>b.onclick=()=>setDay(-1,false));
+  document.querySelectorAll('.jgo').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);setView('days');});
   renderBar();
 }
 function renderStay(){

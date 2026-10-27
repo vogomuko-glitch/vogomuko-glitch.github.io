@@ -541,3 +541,40 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 .pg .ph:first-of-type{border-top:0}
 .sbus{align-items:flex-start;line-height:1.6}
 .sbus .ms{margin-top:3px}
+/* v9.1: 표지(저널), 날짜탭 색선=구분선, 장소바 여백, 요약 모드행 제거 */
+.journal{min-height:calc(100vh - 70px);display:flex;flex-direction:column;padding:28px 8px 24px;max-width:520px;margin:0 auto}
+.mast{display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.15em;line-height:1.5;color:var(--t1)}
+.mast span:last-child{letter-spacing:.05em}
+.hero{padding:36px 0 44px}
+.hero .ct{font-family:'Italiana',Didot,'Times New Roman',serif;font-size:clamp(90px,24vw,140px);font-weight:400;letter-spacing:-.045em;line-height:1.08;margin:0 0 0 -.035em;color:var(--t1)}
+.jspace{flex:1;min-height:60px;max-height:240px;transition:min-height .35s ease}
+.journal.has-open .jspace{min-height:20px}
+.journal.has-open .hero{padding-bottom:16px}
+.jdays{display:grid;gap:6px}
+.jday{background:var(--color);color:var(--text);border-radius:28px;overflow:hidden}
+.jt{width:100%;min-height:52px;display:grid;grid-template-columns:1fr auto 18px;align-items:center;gap:12px;border:0;padding:15px 21px 15px 25px;background:transparent;text-align:left;color:inherit;font:inherit}
+.jd{font-size:15px;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.jw{font-size:10px;letter-spacing:.08em;opacity:.78;margin-left:4px}
+.jcity{font-size:11px}
+.jsign{font-size:21px;line-height:1;justify-self:end}
+.jr{display:grid;grid-template-rows:0fr;transition:grid-template-rows .42s cubic-bezier(.22,.8,.25,1)}
+.jday.open .jr{grid-template-rows:1fr}
+.jri{overflow:hidden;min-height:0}
+.jpl{list-style:none;margin:0;padding:6px 23px 10px}
+.jpl li{padding:12px 0}
+.jpl li+li{border-top:1px solid color-mix(in srgb,currentColor 15%,transparent)}
+.jen{display:block;font-size:clamp(21px,5.5vw,27px);line-height:1.12;letter-spacing:-.045em;font-family:Arial,Pretendard,sans-serif;word-break:keep-all}
+.jloc{display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:7px;font-size:11px;line-height:1.6;opacity:.85}
+.jfoot{display:flex;justify-content:space-between;align-items:center;margin:0 23px 22px;padding-top:12px;border-top:1px solid color-mix(in srgb,currentColor 25%,transparent);font-size:11px;letter-spacing:.06em}
+.jfoot button{border:0;background:none;color:inherit;padding:6px 0;font:inherit;font-size:11px;letter-spacing:.06em}
+.jfooter{display:flex;justify-content:space-between;padding-top:22px;font-size:9px;letter-spacing:.09em;color:var(--t2)}
+.jt.static{cursor:default}
+/* 날짜 탭: 색 선이 곧 구분선 */
+.days{gap:0;margin:0 -4px;padding:0 4px}
+.day{padding:8px 10px 0}
+.day .dcb{display:block;height:3px;border-radius:0;width:auto;margin:8px -10px 0;opacity:.35}
+.day.on .dcb{opacity:1;height:4px;margin-top:7px}
+.pbar{border-top:0;margin-top:0;padding:14px 0 10px}
+html.scrolled .pbar{padding-top:8px}
+/* 장소바 원-글자 여백 */
+.pb{gap:6px}
