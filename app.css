@@ -482,3 +482,7 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 .bul li{line-height:1.6}
 .kv2{line-height:1.6}
 .kj b,.kj i{white-space:nowrap}
+/* v7.2: 하차 점 = 첫 줄 글자 가운데 */
+.node{line-height:24px}
+.node.off::before{top:12px;margin-top:-5px}
+.kj i{white-space:normal}
