@@ -578,3 +578,6 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 html.scrolled .pbar{padding-top:8px}
 /* 장소바 원-글자 여백 */
 .pb{gap:6px}
+.days{display:flex}
+.day{flex:1 1 0;min-width:0;padding:8px 4px 0}
+.day .dcb{margin-left:-4px;margin-right:-4px}
