@@ -450,3 +450,27 @@ html.scrolled .pbar{padding-top:8px}
 .bul .kj b{font-weight:700}
 .dsum .big b{font-size:22px}
 .dsum .big span{font-size:13px;color:var(--t2)}
+/* v7: 표지 글자(한글+회색 日本語·English·역번호), 탑승 카드 구조, 점 정렬, 장소바 간격 */
+.pbar{margin-top:12px;border-top:1px solid var(--ln);padding:10px 0 10px}
+html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
+.kj{display:inline}
+.kj b{font-weight:700;color:var(--t1)}
+.kj i{font-style:normal;font-weight:400;font-size:.8em;color:var(--t2);margin-left:5px;letter-spacing:0}
+.node{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;position:relative}
+.node .kj b{font-size:16px}
+.node .kj i{font-size:12.5px}
+.node .lbl,.node em{font-style:normal;font-size:12.5px;color:var(--t2)}
+.node.on::before{display:none}
+.node.off::before{content:"";position:absolute;left:-35px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--mc,var(--t1));border:0}
+.row .lc .ic{margin-top:-3px}
+.row .rl{margin-top:2px}
+.bl .sub{font-size:13px;color:var(--t2)}
+.kvs{display:flex;flex-direction:column;gap:5px;margin-top:2px}
+.kv2{display:grid;grid-template-columns:46px 1fr;gap:0 8px;font-size:14.5px;line-height:1.5}
+.kv2 .lb{color:var(--t2);font-size:12.5px;padding-top:2px}
+.kv2 .vl{color:var(--t1);min-width:0}
+.kv2 .vl b{font-weight:700}
+.bul li{font-size:14.5px}
+.node .lbl{margin-left:auto}
+.node.off::before{top:12px;margin-top:0}
+.bl .tm{margin-left:auto}

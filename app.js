@@ -26,7 +26,7 @@ function nowHTML(day){
 }
 const STATUS={user:['내가 정한 시간','schedule',''],tt:['공식 시간표','verified','ok'],est:['예상 · 현장 확인','help','v'],v:['확인 필요','help','v']};
 
-let INDEX=null, TRIP=null, cur=null; let GL=[]; // [ja,ko] 긴 것 먼저
+let INDEX=null, TRIP=null, cur=null; let GL=[], NM={}; // 일본어 이름 → {ko,en,code}
 let flights=LS.get('trip.flight',{});
 
 async function loadJSON(p){ if(window.__BUNDLE__&&window.__BUNDLE__[p]) return window.__BUNDLE__[p]; const r=await fetch(p+(p.includes('?')?'&':'?')+'v='+(window.__V__||Date.now()),{cache:'no-store'}); return r.json(); }
@@ -43,7 +43,7 @@ async function boot(){
 function fail(e){ $('#main').innerHTML=`<p style="padding:40px 0;color:var(--ink2)">데이터를 못 불러왔어. 새로고침 해봐.<br><small>${esc(e&&e.message||e)}</small></p>`; }
 async function openTrip(meta){
   try{ TRIP=await loadJSON(meta.file); }catch(e){ return fail(e); }
-  GL=Object.entries(TRIP.glossary||{}).sort((a,b)=>b[0].length-a[0].length); GLRE=null;
+  NM=TRIP.names||{}; GL=Object.keys(NM).sort((a,b)=>b.length-a.length); GLRE=null;
   LS.set('trip.last',TRIP.id);
   if(location.hash!=='#'+TRIP.id) history.replaceState(null,'','#'+TRIP.id);
   document.title=TRIP.title;
@@ -163,29 +163,38 @@ function calcRows(){
 let stepIdx=LS.get('trip.step',{});
 /* ---------- 리허설 v4: 한 덩어리 = 한 장소. 안에 동작 줄들. ---------- */
 let GLRE=null;
-function koify(txt){ // 일본어 → 한글읽기 + 작은 일본어 (한 번에 치환, 긴 것 우선)
-  if(!GLRE){ const keys=GL.map(g=>g[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')); GLRE=keys.length?new RegExp(keys.join('|'),'g'):null; }
-  if(!GLRE) return esc(txt);
-  const map=Object.fromEntries(GL);
-  return esc(txt).replace(GLRE,m=>`<span class="kj"><b>${esc(map[m])}</b><i>${esc(m)}</i></span>`);
+/* 표지 글자: 한글(굵게) + 회색 작게 日本語 · English · 역번호 */
+const nmHTML=(ja,full)=>{ const n=NM[ja]; if(!n) return esc(ja); const sub=full?[ja,n.en,n.code].filter(Boolean).join(' · '):ja; return `<span class="kj"><b>${esc(n.ko)}</b><i>${esc(sub)}</i></span>`; };
+const KO=ja=>nmHTML(ja,true);
+function koify(txt){ // {{...}} 안은 그대로(주소 등)
+  if(!GLRE){ const keys=GL.map(g=>g.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')); GLRE=keys.length?new RegExp(keys.join('|'),'g'):null; }
+  return String(txt).split(/\{\{(.+?)\}\}/).map((seg,i)=> i%2 ? esc(seg) : (GLRE? esc(seg).replace(GLRE,m=>nmHTML(m,false)) : esc(seg)) ).join('');
 }
-const mdfmt=x=>koify(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
-const KO=ja=>{ const f=GL.find(g=>g[0]===ja); return f?`<span class="kj"><b>${esc(f[1])}</b><i>${esc(ja)}</i></span>`:esc(ja); };
+const dirHTML=ja=>{ // "竹田·奈良" 방면
+  const parts=ja.split('·'); const ko=parts.map(x=>NM[x]?NM[x].ko:x).join('·'), en=parts.map(x=>NM[x]?NM[x].en:x).filter(Boolean).join('/');
+  return `<span class="kj"><b>${esc(ko)} 방면</b><i>${esc(ja)}方面${en?' · For '+esc(en):''}</i></span>`; };
+function mdfmt(x){ // **X** 방면 → 방면 표기, 나머지 ** ** 는 굵게
+  const out=[]; let last=0; const re=/\*\*(.+?)\*\*(\s*방면)?/g; let m;
+  while((m=re.exec(x))){ out.push(koify(x.slice(last,m.index))); out.push(m[2]&&!m[1].includes('{{')?dirHTML(m[1]):`<b>${koify(m[1])}</b>`); last=re.lastIndex; }
+  out.push(koify(x.slice(last))); return out.join('');
+}
 function rowHTML(s,k,n){
   let [tn,ti]=stepLabel(s); if(MODEICON[s.mode]) ti=MODEICON[s.mode]; const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
   const P=(TRIP.places||{})[s.pid];
   const tm=(s.t&&!s.place)?`<span class="tm num">${esc(s.t)}</span>`:'';
-  let head='';
+  let head='', body='';
   if(s.type==='ride'){
-    head=`${s.onName?`<div class="node">${KO(s.onName)}<span>승차</span>${s.onSub?`<em>${esc(s.onSub)}</em>`:''}${tm}</div>`:''}
-      <div class="bl"><span class="badge">${esc(s.line||tn)}</span><span class="sub">${esc(s.kind||tn)}</span>${!s.onName?tm:''}</div>
-      <div class="sub2">${[s.stops?esc(s.stops)+' 이동':'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join(' · ')}</div>`;
+    const meta=[s.kind||tn,s.stops?esc(s.stops):'',s.dur?esc(s.dur):'',s.pay?esc(s.pay):(s.fare?esc(s.fare):'')].filter(Boolean).join(' · ');
+    head=`${s.onName?`<div class="node on">${KO(s.onName)}${s.onSub?`<em>${esc(s.onSub)}</em>`:''}</div>`:''}
+      <div class="bl"><span class="badge">${esc(s.line||tn)}</span><span class="sub">${meta}</span>${tm}</div>`;
+    const kv=(lb,v)=>v?`<div class="kv2"><span class="lb">${lb}</span><span class="vl">${mdfmt(v)}</span></div>`:'';
+    body=`<div class="kvs">${kv('승강장',s.plat)}${kv('내려서',s.after)}${kv('참고',s.see)}</div>`;
   } else if(s.type==='walk'){
     head=`<div class="hl"><b>도보${s.dur?' '+esc(s.dur):''}</b>${tm}</div>`;
   } else if(s.type==='taxi'){
-    head=`<div class="hl"><b>택시${s.dur?' '+esc(s.dur):''}</b>${s.fare?`<span class="sub">${esc(s.fare)}</span>`:''}${tm}</div>`;
+    head=`<div class="hl"><b>택시${s.dur?' '+esc(s.dur):''}</b>${s.fare?`<span class="sub">${esc(s.fare)}${s.pay?' · '+esc(s.pay):''}</span>`:''}${tm}</div>`;
   } else {
-    head=`<div class="hl"><b>${tn}${s.dur?' '+esc(s.dur):''}</b>${s.fare?`<span class="sub">${esc(s.fare)}</span>`:''}${tm}</div>`;
+    head=`<div class="hl"><b>${esc(tn)}${s.dur?' '+esc(s.dur):''}</b>${s.fare?`<span class="sub">${esc(s.fare)}</span>`:''}${tm}</div>`;
   }
   const intro=P&&P.intro?`<p class="intro">${koify(P.intro)}${P.note?`<span class="note">${koify(P.note)}</span>`:''}</p>`:'';
   const bul=s.lines&&s.lines.length?`<ul class="bul">${s.lines.map(l=>`<li>${mdfmt(l)}</li>`).join('')}</ul>`:'';
@@ -195,10 +204,10 @@ function rowHTML(s,k,n){
   if(s.type==='ride'||s.type==='walk'||s.type==='taxi'){ links.push(`<a class="live" target="_blank" rel="noopener" href="${gdir(s.q1||(s.onName||''),s.q2||(s.offName||s.q||''),s.type==='taxi'?'driving':s.type==='walk'?'walking':'transit')}">${ms('directions','s')}${s.type==='ride'?'실시간 도착':'구글맵 길찾기'}</a>`); }
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
-  const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}<span>하차</span>${s.offSub?`<em>${esc(s.offSub)}</em>`:''}</div>`:'';
+  const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}${s.offSub?`<em>${esc(s.offSub)}</em>`:''}<span class="lbl">하차</span></div>`:'';
   return `<div class="row m-${s.mode||'stay'}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
     ${head}${intro}
-    ${bul}
+    ${body}${bul}
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
     ${img}
     ${links.length?`<div class="plinks">${links.join('')}</div>`:''}
