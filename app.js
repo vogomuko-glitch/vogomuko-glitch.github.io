@@ -91,7 +91,7 @@ function stepLabel(s){ // 한국 앱에서 익숙한 말로
 function renderTrip(){
   const tk=now().key;
   $('#top').innerHTML=`<div class="top-row"><a class="ib" href="#" aria-label="여행 목록">${ms('arrow_back')}</a><h1>${esc(TRIP.title)}</h1><button class="ib r" id="bMode" aria-label="보기 전환">${ms(mode==='cards'?'view_list':'view_carousel')}</button><button class="ib r" id="bInfo" aria-label="정보">${ms('info')}</button></div>
-    <div class="days" role="tablist">${TRIP.days.map(d=>`<button role="tab" class="day ${d.id===cur?'on':''} ${d.d===tk?'today':''}" data-id="${d.id}" aria-selected="${d.id===cur}"><small>${esc(d.w)}</small><b class="num">${esc(d.d)}</b></button>`).join('')}</div>`;
+    <div class="days" role="tablist">${TRIP.days.map(d=>`<button role="tab" class="day ${d.id===cur?'on':''} ${d.d===tk?'today':''}" data-id="${d.id}" aria-selected="${d.id===cur}"><small>${esc(d.w)}</small><b class="num">${esc(d.d)}</b></button>`).join('')}</div><div class="pbar" id="pbar" hidden></div>`;
   $('#top').querySelectorAll('.day').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);renderTrip();window.scrollTo(0,0);});
   $('#bMode').onclick=()=>{mode=mode==='cards'?'list':'cards';LS.set('trip.mode',mode);renderTrip();window.scrollTo(0,0);};
   $('#bInfo').onclick=()=>openSheet(`<h3>${esc(TRIP.title)}</h3><p class="lead">${esc(TRIP.dates)} · ${esc(TRIP.tzNote||TRIP.timezone)}</p>
@@ -99,7 +99,7 @@ function renderTrip(){
     <div class="kv">${ms('view_carousel')}<div><b>리허설</b><p>한 장에 한 동작. 집에서 넘겨보며 장면을 외우는 용도. 사진이 이상하면 카드 번호를 알려줘.</p></div></div>
     <div class="kv">${ms('view_list')}<div><b>전체 보기</b><p>하루 전체 시간표. ${ms('verified','s')} 공식 시간표 · ${ms('schedule','s')} 내가 정한 시간 · ${ms('help','s')} 예상, 현장에서 확인</p></div></div>`);
   const day=TRIP.days.find(d=>d.id===cur);
-  document.body.classList.remove('cards'); window.onscroll=null;
+  document.body.classList.remove('cards'); window.onscroll=null; const pb0=$('#pbar'); if(pb0) pb0.hidden=true;
   if(mode==='cards'&&day.steps&&day.steps.length){ renderCards(day); return; }
   const nv=day.items.filter(i=>i.st==='v'||i.st==='est').length, np=day.items.filter(i=>i.k==='p').length;
   let h=`<div class="dh"><h2>${esc(day.title)}</h2><div class="city">${esc(day.city)}</div>
@@ -191,7 +191,7 @@ function rowHTML(s,k,n){
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
   const off=s.type==='ride'&&s.offName?`<div class="node off"><b>${esc(s.offName)}</b><span>하차</span>${s.offSub?`<em>${esc(s.offSub)}</em>`:''}</div>`:'';
-  return `<div class="row m-${s.mode||'stay'}" id="s${k}" data-k="${k}"><div class="lc">${ms(ti)}<i class="rl"></i></div><div class="rbd">
+  return `<div class="row m-${s.mode||'stay'}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
     ${head}${intro}
     ${bul}
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
@@ -205,15 +205,17 @@ function renderCards(day){
   const anchors=steps.map((st,k)=>st.place?k:-1).filter(k=>k>=0);
   // 그룹: 장소(anchor)부터 다음 장소 전까지. 첫 장소 전 단계는 첫 그룹에 포함
   const groups=[]; anchors.forEach((k,ai)=>{ const from=ai===0?0:k, to=ai+1<anchors.length?anchors[ai+1]:n; groups.push({k,ai,from,to}); });
-  const rail=`<aside class="rail" aria-label="오늘 장소">${anchors.map((k,ai)=>`<button class="rd ${steps[k].opt?'opt':''}" data-k="${k}"><b></b><span>${esc(steps[k].place)}</span></button>${ai<anchors.length-1?`<i class="seg" data-ai="${ai}"></i>`:''}`).join('')}</aside>`;
   const mins=x=>{if(!x)return 0;let m=0;const h=/(\d+)\s*시간/.exec(x);if(h)m+=+h[1]*60;const mm=/(\d+)\s*분/.exec(x);if(mm)m+=+mm[1];return m;};
   const fmt=m=>m>=60?`${Math.floor(m/60)}시간${m%60?' '+m%60+'분':''}`:`${m}분`;
   const walk=steps.filter(x=>x.type==='walk').reduce((a,x)=>a+mins(x.dur),0), move=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>a+mins(x.dur),0);
   const fare=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>{const m=/([\d,]+)\s*엔/.exec(x.fare||'');return a+(m?+m[1].replace(/,/g,''):0);},0);
   const rides=steps.filter(x=>x.type==='ride').length;
+  const cnt={}; steps.forEach(x=>{ if(/^(ride|taxi)$/.test(x.type)) cnt[x.mode]=(cnt[x.mode]||0)+1; });
+  const MN={citybus:'버스',kyotobus:'버스',bus:'버스','subway-k':'지하철','subway-t':'지하철','subway-y':'지하철',jr:'JR',kintetsu:'긴테쓰',taxi:'택시'};
+  const modes=`<div class="mline">${Object.entries(cnt).map(([m,c])=>`<span class="m-${m}"><i class="ic">${ms(MODEICON[m]||'directions_bus','s')}</i>${MN[m]||m} ${c}</span>`).join('')}<span class="m-walk"><i class="ic">${ms('directions_walk','s')}</i>도보 ${fmt(walk)}</span></div>`;
   const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x||'');return m?+m[1]*60+ +m[2]:null;}, f2=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
   const dl=(day.ret&&day.target)?`<div class="line3">${ms('wb_twilight','s')}해 짐 ${esc(day.sunset||'17:00')} · <b>${esc(day.target)}</b> 귀가하려면 마지막 장소 <b>${f2(hm(day.target)-day.ret)}</b> 출발${day.max?` · 최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발`:''}${day.dlNote?`<span class="dim"> · ${esc(day.dlNote)}</span>`:''}</div>`:'';
-  const summ=`<div class="dsum"><div class="big"><b class="num">총 ${fmt(move+walk)}</b>${day.home?`<span class="num">도착 ${esc(day.home.replace(/\s*숙소.*$/,''))}</span>`:''}</div><div class="line2">${[fare?`교통비 약 ${fare.toLocaleString()}엔`:'',rides?`대중교통 ${rides}회`:'',`도보 ${fmt(walk)}`].filter(Boolean).join(' · ')}</div>${dl}</div>`;
+  const summ=`<div class="dsum"><div class="big"><b class="num">총 ${fmt(move+walk)}</b>${day.home?`<span class="num">도착 ${esc(day.home.replace(/\s*숙소.*$/,''))}</span>`:''}</div><div class="line2">${[fare?`교통비 약 ${fare.toLocaleString()}엔`:'',rides?`대중교통 ${rides}회`:''].filter(Boolean).join(' · ')}</div>${modes}${dl}</div>`;
   // 이동 줄 길찾기 목적지 보강: 다음 장소(q) 기준
   steps.forEach((st,k)=>{ if(/^(walk|taxi)$/.test(st.type)&&!st.q2){ const nx=steps.slice(k+1).find(x=>x.q||x.v); st.q1=st.q1||'현재 위치'; st.q2=nx?(nx.v?nx.v.lat+','+nx.v.lng:nx.q):TRIP.home.q; } if(st.type==='ride'&&!st.q2){ st.q1=st.q1||st.onName||'현재 위치'; st.q2=st.offName||TRIP.home.q; } });
   const lastPlaceAi=(()=>{ let r=-1; anchors.forEach((k,ai)=>{ if(steps[k].place!=='숙소') r=ai; }); return r; })();
@@ -222,18 +224,20 @@ function renderCards(day){
     const q=p.v?gmap(p.v.lat+','+p.v.lng):gmap(p.q||p.a);
     const dlb=(g.ai===lastPlaceAi&&day.ret&&day.target)?`<div class="dl">${ms('schedule','s')}<div><b>${esc(day.target)} 귀가 → 여기서 ${f2(hm(day.target)-day.ret)} 출발</b>${day.max?`<span>최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발</span>`:''}</div></div>`:'';
     return `<section class="grp ${p.opt?'opt':''}" id="g${g.ai}" data-ai="${g.ai}">
-      <h3 class="stop"><span>${esc(p.place)}${p.opt?'<i class="optag">선택</i>':''}</span>${p.t?`<small class="num">${esc(p.t)}</small>`:''}</h3>${dlb}
+      <h3 class="stop"><i class="pd"></i><span>${esc(p.place)}${p.opt?'<i class="optag">선택</i>':''}</span>${p.t?`<small class="num">${esc(p.t)}</small>`:''}</h3>${dlb}
       ${rows.join('')}
       <div class="gft"><a target="_blank" rel="noopener" href="${q}">${ms('map','s')}${esc(p.place)} 지도</a><button class="lost" data-k="${g.k}">${ms('sos','s')}길 잃음</button></div>
     </section>`; }).join('');
   document.body.classList.add('cards');
-  $('#main').innerHTML=`<div class="rw">${rail}<div class="col"><div class="ctx" id="ctx"></div>${summ}${body}<p class="end">오늘 끝</p></div></div>`;
+  $('#main').innerHTML=`<div class="col">${summ}${body}<p class="end">오늘 끝</p></div>`;
+  const pb=$('#pbar'); pb.hidden=false;
+  pb.innerHTML=anchors.map((k,ai)=>`<button class="pb ${steps[k].opt?'opt':''}" data-ai="${ai}"><i></i><span>${esc(steps[k].place)}</span></button>`).join('<i class="pseg"></i>');
   renderBar();
-  const hdr=()=>(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdr'))||150);
+  const hdr=()=>($('#top').offsetHeight||150);
   const setNow=ai=>{
-    document.querySelectorAll('.rail .rd').forEach((b,i)=>{ b.classList.toggle('now',i===ai); b.classList.toggle('past',i<ai); });
-    document.querySelectorAll('.rail .seg').forEach((sg,i)=>{ sg.classList.toggle('past',i<ai); sg.classList.remove('live'); });
-    $('#ctx').innerHTML=`${ms('location_on','s')}<b>${esc(steps[anchors[ai]].place)}</b><span class="dim">${ai+1} / ${anchors.length}</span>`;
+    pb.querySelectorAll('.pb').forEach((b,i)=>{ b.classList.toggle('now',i===ai); b.classList.toggle('past',i<ai); });
+    pb.querySelectorAll('.pseg').forEach((sg,i)=>sg.classList.toggle('past',i<ai));
+    const nb=pb.querySelector('.pb.now'); if(nb) nb.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
     stepIdx[TRIP.id+':'+day.id]=ai; LS.set('trip.step',stepIdx);
   };
   const gs=[...document.querySelectorAll('.grp')];
@@ -242,7 +246,7 @@ function renderCards(day){
   const pick=()=>{ const line=hdr()+30; let best=gs[0]; for(const g of gs){ if(g.getBoundingClientRect().top<=line) best=g; else break; } setNow(+best.dataset.ai); };
   let raf=0; window.onscroll=()=>{ if(!raf) raf=requestAnimationFrame(()=>{raf=0;pick();}); };
   const jump=ai=>{ const el=$('#g'+ai); window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-hdr()+6,behavior:'smooth'}); };
-  document.querySelectorAll('.rail .rd').forEach((b,i)=>b.onclick=()=>jump(i));
+  pb.querySelectorAll('.pb').forEach((b,i)=>b.onclick=()=>jump(i));
   document.querySelectorAll('.say').forEach(b=>b.onclick=()=>{ const ph=TRIP.phrases[+b.dataset.say]; openSheet(`<h3>이거 보여줘</h3><p class="lead">${esc(ph[0])}</p><div class="bigsay">${esc(ph[1])}</div><p style="color:var(--accent);font-size:16px">${esc(ph[2])}</p>`); });
   document.querySelectorAll('.lost').forEach(b=>b.onclick=()=>{ const s=steps[+b.dataset.k]; openSheet(`<h3>길 잃었을 때</h3><p class="lead">당황하지 말고 둘 중 하나.</p>
     <a class="cta" target="_blank" rel="noopener" href="${s.v?gdir('현재 위치',s.v.lat+','+s.v.lng):gdir('현재 위치',s.q||s.a)}">${ms('directions','s')} ${esc(s.place||'가려던 곳')}으로 길찾기</a>

@@ -393,3 +393,42 @@ body.cards{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .rail .rd.opt b{border-style:dashed}
 .rail .rd.opt span{font-style:normal}
 .bar .wrap{display:flex}
+
+/* ===== v6: 세로줄 하나 · 가로 장소 바 · 색 원 아이콘 ===== */
+.rw{display:block}
+.rail{display:none}
+.ctx{display:none}
+.pbar{display:flex;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;padding:6px 0 10px;margin:0 -4px}
+.pbar::-webkit-scrollbar{display:none}
+.pb{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;padding:0 6px;min-width:44px}
+.pb i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--t2);background:var(--bg)}
+.pb span{font-size:11px;color:var(--t2);white-space:nowrap;line-height:1}
+.pb.past i{background:var(--t2);border-color:var(--t2)}
+.pb.now i{width:12px;height:12px;background:var(--t1);border-color:var(--t1);box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--t1)}
+.pb.now span{color:var(--t1);font-weight:700}
+.pb.opt i{border-style:dashed}
+.pseg{flex:0 0 14px;height:0;border-top:1px dashed var(--ln);margin-top:-14px}
+.pseg.past{border-top:1px solid var(--t2)}
+/* 경로선 열 */
+.row{grid-template-columns:36px 1fr;gap:0 12px;padding:0 0 16px}
+.row .lc{align-items:center}
+.row .lc .ic{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--mc,var(--t1));color:#fff;flex:0 0 auto;z-index:1}
+.row .lc .ic .ms{font-size:18px;color:#fff;width:auto}
+.row.m-stay .lc .ic{background:var(--bg);border:1.5px solid var(--t1)}
+.row.m-stay .lc .ic .ms{color:var(--t1)}
+.row.m-walk .lc .ic{background:var(--m-walk)}
+.row .lc>.ms{display:none}
+.row .rl{margin-top:4px}
+.node::before{left:-32px;width:10px;height:10px;margin-top:-6px}
+.col .grp .stop{display:grid;grid-template-columns:36px 1fr auto;gap:0 12px;align-items:center;margin:0 0 12px}
+.col .grp .stop .pd{width:14px;height:14px;border-radius:50%;background:var(--t1);justify-self:center;display:block}
+.col .grp.opt .stop .pd{background:var(--bg);border:2px dashed var(--t2)}
+.col .grp{padding:14px 0 6px}
+.dl{margin-left:48px}
+.intro{margin:0}
+.mline{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px;color:var(--t1)}
+.mline span{display:inline-flex;align-items:center;gap:5px}
+.mline .ic{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--mc,var(--t2));color:#fff}
+.mline .ic .ms{font-size:13px;color:#fff;width:auto}
+.mline .m-walk{--mc:var(--m-walk)} .mline .m-citybus{--mc:var(--m-citybus)} .mline .m-kyotobus{--mc:var(--m-kyotobus)} .mline .m-bus{--mc:var(--m-bus)} .mline .m-subway-k{--mc:var(--m-subway-k)} .mline .m-subway-t{--mc:var(--m-subway-t)} .mline .m-subway-y{--mc:var(--m-subway-y)} .mline .m-jr{--mc:var(--m-jr)} .mline .m-kintetsu{--mc:var(--m-kintetsu)} .mline .m-taxi{--mc:var(--m-taxi)}
+.gft{padding-left:48px}
