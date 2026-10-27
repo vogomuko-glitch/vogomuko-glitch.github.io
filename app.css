@@ -432,3 +432,9 @@ body.cards{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .mline .ic .ms{font-size:13px;color:#fff;width:auto}
 .mline .m-walk{--mc:var(--m-walk)} .mline .m-citybus{--mc:var(--m-citybus)} .mline .m-kyotobus{--mc:var(--m-kyotobus)} .mline .m-bus{--mc:var(--m-bus)} .mline .m-subway-k{--mc:var(--m-subway-k)} .mline .m-subway-t{--mc:var(--m-subway-t)} .mline .m-subway-y{--mc:var(--m-subway-y)} .mline .m-jr{--mc:var(--m-jr)} .mline .m-kintetsu{--mc:var(--m-kintetsu)} .mline .m-taxi{--mc:var(--m-taxi)}
 .gft{padding-left:48px}
+
+/* 스크롤 시 날짜 탭 접기 */
+.days{transition:max-height .18s ease,opacity .18s ease;max-height:60px;overflow:hidden}
+html.scrolled .days{max-height:0;opacity:0;padding:0}
+html.scrolled .pbar{padding-top:8px}
+@media (prefers-reduced-motion:reduce){.days{transition:none}}
