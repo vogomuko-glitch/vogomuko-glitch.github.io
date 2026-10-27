@@ -492,3 +492,7 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 .row.m-subway-m{--mc:var(--m-subway-m)} .mline .m-subway-m{--mc:var(--m-subway-m)}
 :root{--m-nankai:#0b6ab3}
 .row.m-nankai{--mc:var(--m-nankai)} .mline .m-nankai{--mc:var(--m-nankai)}
+/* 장소바: 선택 장소 점 깨짐 수정(점선 테두리 제거), 구간선은 변하지 않음 */
+.pb.opt i{border-style:solid;border-color:var(--ln)}
+.pb.opt span{color:var(--t2)}
+.pseg,.pseg.past{border-top:1px solid var(--ln)}
