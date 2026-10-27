@@ -205,7 +205,7 @@ function rowHTML(s,k,n){
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
   const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}${s.offSub?`<em>${esc(s.offSub)}</em>`:''}<span class="lbl">하차</span></div>`:'';
-  return `<div class="row m-${s.mode||'stay'}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
+  return `<div class="row m-${s.mode||'stay'} ${off?'has-off':''}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
     ${head}${intro}
     ${body}${bul}
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}

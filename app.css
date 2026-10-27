@@ -486,3 +486,5 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 .node{line-height:24px}
 .node.off::before{top:12px;margin-top:-5px}
 .kj i{white-space:normal}
+/* 하차 점에서 선 끝 */
+.row.has-off .rl{margin-bottom:12px}
