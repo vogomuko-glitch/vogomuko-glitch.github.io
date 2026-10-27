@@ -26,7 +26,7 @@ function nowHTML(day){
 }
 const STATUS={user:['내가 정한 시간','schedule',''],tt:['공식 시간표','verified','ok'],est:['예상 · 현장 확인','help','v'],v:['확인 필요','help','v']};
 
-let INDEX=null, TRIP=null, cur=null;
+let INDEX=null, TRIP=null, cur=null; let GL=[]; // [ja,ko] 긴 것 먼저
 let flights=LS.get('trip.flight',{});
 
 async function loadJSON(p){ if(window.__BUNDLE__&&window.__BUNDLE__[p]) return window.__BUNDLE__[p]; const r=await fetch(p+(p.includes('?')?'&':'?')+'v='+(window.__V__||Date.now()),{cache:'no-store'}); return r.json(); }
@@ -43,6 +43,7 @@ async function boot(){
 function fail(e){ $('#main').innerHTML=`<p style="padding:40px 0;color:var(--ink2)">데이터를 못 불러왔어. 새로고침 해봐.<br><small>${esc(e&&e.message||e)}</small></p>`; }
 async function openTrip(meta){
   try{ TRIP=await loadJSON(meta.file); }catch(e){ return fail(e); }
+  GL=Object.entries(TRIP.glossary||{}).sort((a,b)=>b[0].length-a[0].length); GLRE=null;
   LS.set('trip.last',TRIP.id);
   if(location.hash!=='#'+TRIP.id) history.replaceState(null,'','#'+TRIP.id);
   document.title=TRIP.title;
@@ -82,7 +83,7 @@ function todayIndex(){ const k=now().key; const i=TRIP.days.findIndex(d=>d.d===k
 let mode='cards'; // cards=리허설(기본) / list=전체 보기
 const TYPE={walk:['도보','directions_walk'],ride:['탑승','directions_bus'],taxi:['택시','local_taxi'],buy:['창구','confirmation_number'],see:['관람','visibility'],do:['할 일','task_alt'],arrive:['도착','flag']};
 const RIDE={directions_bus:'버스',subway:'지하철',train:'열차',tram:'전철',directions_boat:'배'};
-const MODEICON={walk:'directions_walk',taxi:'local_taxi',citybus:'directions_bus',kyotobus:'directions_bus',bus:'directions_bus','subway-k':'subway','subway-y':'subway','subway-t':'subway',jr:'train',kintetsu:'train'};
+const MODEICON={walk:'directions_walk',taxi:'local_taxi',citybus:'directions_bus',loop:'directions_bus',flat:'directions_bus',kyotobus:'directions_bus',bus:'directions_bus','subway-k':'subway','subway-y':'subway','subway-t':'subway',jr:'train',ltd:'train',kintetsu:'train'};
 function stepLabel(s){ // 한국 앱에서 익숙한 말로
   if(s.label) return [s.label,(TYPE[s.type]||TYPE.do)[1]];
   if(s.type==='ride'){ const m=/(バス|버스)/.test(s.a)?'directions_bus':/(지하철|가라스마선|요츠바시線|요츠바시선|四つ橋|肥後橋)/.test(s.a)?'subway':/(하루카|하시다테|新快速|신쾌속|긴테쓰|急行|JR)/.test(s.a)?'train':'directions_bus'; return [RIDE[m],m]; }
@@ -161,14 +162,22 @@ function calcRows(){
 /* ---------- 리허설: 세로로 쭉, 왼쪽 점이 스크롤 따라 움직임 ---------- */
 let stepIdx=LS.get('trip.step',{});
 /* ---------- 리허설 v4: 한 덩어리 = 한 장소. 안에 동작 줄들. ---------- */
-const mdfmt=x=>esc(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+let GLRE=null;
+function koify(txt){ // 일본어 → 한글읽기 + 작은 일본어 (한 번에 치환, 긴 것 우선)
+  if(!GLRE){ const keys=GL.map(g=>g[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')); GLRE=keys.length?new RegExp(keys.join('|'),'g'):null; }
+  if(!GLRE) return esc(txt);
+  const map=Object.fromEntries(GL);
+  return esc(txt).replace(GLRE,m=>`<span class="kj"><b>${esc(map[m])}</b><i>${esc(m)}</i></span>`);
+}
+const mdfmt=x=>koify(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+const KO=ja=>{ const f=GL.find(g=>g[0]===ja); return f?`<span class="kj"><b>${esc(f[1])}</b><i>${esc(ja)}</i></span>`:esc(ja); };
 function rowHTML(s,k,n){
   let [tn,ti]=stepLabel(s); if(MODEICON[s.mode]) ti=MODEICON[s.mode]; const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
   const P=(TRIP.places||{})[s.pid];
   const tm=(s.t&&!s.place)?`<span class="tm num">${esc(s.t)}</span>`:'';
   let head='';
   if(s.type==='ride'){
-    head=`${s.onName?`<div class="node"><b>${esc(s.onName)}</b><span>승차</span>${s.onSub?`<em>${esc(s.onSub)}</em>`:''}${tm}</div>`:''}
+    head=`${s.onName?`<div class="node">${KO(s.onName)}<span>승차</span>${s.onSub?`<em>${esc(s.onSub)}</em>`:''}${tm}</div>`:''}
       <div class="bl"><span class="badge">${esc(s.line||tn)}</span><span class="sub">${esc(s.kind||tn)}</span>${!s.onName?tm:''}</div>
       <div class="sub2">${[s.stops?esc(s.stops)+' 이동':'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join(' · ')}</div>`;
   } else if(s.type==='walk'){
@@ -178,7 +187,7 @@ function rowHTML(s,k,n){
   } else {
     head=`<div class="hl"><b>${tn}${s.dur?' '+esc(s.dur):''}</b>${s.fare?`<span class="sub">${esc(s.fare)}</span>`:''}${tm}</div>`;
   }
-  const intro=P&&P.intro?`<p class="intro">${esc(P.intro)}${P.note?`<span class="note">${esc(P.note)}</span>`:''}</p>`:'';
+  const intro=P&&P.intro?`<p class="intro">${koify(P.intro)}${P.note?`<span class="note">${koify(P.note)}</span>`:''}</p>`:'';
   const bul=s.lines&&s.lines.length?`<ul class="bul">${s.lines.map(l=>`<li>${mdfmt(l)}</li>`).join('')}</ul>`:'';
   let img='';
   if(CAN_EMBED&&s.v){ img=`<div class="cv"><div class="ph">로드뷰</div><iframe title="장면" data-src="${svurl(s.v.lat,s.v.lng,s.v.h||0)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${esc(s.v.cap||'')}</span></div>`; }
@@ -186,7 +195,7 @@ function rowHTML(s,k,n){
   if(s.type==='ride'||s.type==='walk'||s.type==='taxi'){ links.push(`<a class="live" target="_blank" rel="noopener" href="${gdir(s.q1||(s.onName||''),s.q2||(s.offName||s.q||''),s.type==='taxi'?'driving':s.type==='walk'?'walking':'transit')}">${ms('directions','s')}${s.type==='ride'?'실시간 도착':'구글맵 길찾기'}</a>`); }
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
-  const off=s.type==='ride'&&s.offName?`<div class="node off"><b>${esc(s.offName)}</b><span>하차</span>${s.offSub?`<em>${esc(s.offSub)}</em>`:''}</div>`:'';
+  const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}<span>하차</span>${s.offSub?`<em>${esc(s.offSub)}</em>`:''}</div>`:'';
   return `<div class="row m-${s.mode||'stay'}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
     ${head}${intro}
     ${bul}
@@ -207,11 +216,11 @@ function renderCards(day){
   const fare=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>{const m=/([\d,]+)\s*엔/.exec(x.fare||'');return a+(m?+m[1].replace(/,/g,''):0);},0);
   const rides=steps.filter(x=>x.type==='ride').length;
   const cnt={}; steps.forEach(x=>{ if(/^(ride|taxi)$/.test(x.type)) cnt[x.mode]=(cnt[x.mode]||0)+1; });
-  const MN={citybus:'버스',kyotobus:'버스',bus:'버스','subway-k':'지하철','subway-t':'지하철','subway-y':'지하철',jr:'JR',kintetsu:'긴테쓰',taxi:'택시'};
+  const MN={citybus:'버스',loop:'버스',flat:'버스',kyotobus:'교토버스',bus:'버스','subway-k':'지하철','subway-t':'지하철','subway-y':'지하철',jr:'JR',ltd:'특급',kintetsu:'긴테쓰',taxi:'택시'};
   const modes=`<div class="mline">${Object.entries(cnt).map(([m,c])=>`<span class="m-${m}"><i class="ic">${ms(MODEICON[m]||'directions_bus','s')}</i>${MN[m]||m} ${c}</span>`).join('')}<span class="m-walk"><i class="ic">${ms('directions_walk','s')}</i>도보 ${fmt(walk)}</span></div>`;
   const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x||'');return m?+m[1]*60+ +m[2]:null;}, f2=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
   const dl=(day.ret&&day.target)?`<div class="line3">${ms('wb_twilight','s')}해 짐 ${esc(day.sunset||'17:00')} · <b>${esc(day.target)}</b> 귀가하려면 마지막 장소 <b>${f2(hm(day.target)-day.ret)}</b> 출발${day.max?` · 최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발`:''}${day.dlNote?`<span class="dim"> · ${esc(day.dlNote)}</span>`:''}</div>`:'';
-  const summ=`<div class="dsum"><div class="big"><b class="num">총 ${fmt(move+walk)}</b>${day.home?`<span class="num">도착 ${esc(day.home.replace(/\s*숙소.*$/,''))}</span>`:''}</div><div class="line2">${fare?`교통비 약 ${fare.toLocaleString()}엔`:''}</div>${modes}${dl}</div>`;
+  const summ=`<div class="dsum"><div class="big"><b class="num">${esc((steps.find(x=>x.t)||{}).t||'')} → ${esc((day.home||'').replace(/\s*숙소.*$/,''))}</b><span>숙소 도착</span></div><div class="line2">${fare?`교통비 약 ${fare.toLocaleString()}엔`:''}</div>${modes}${dl}</div>`;
   // 이동 줄 길찾기 목적지 보강: 다음 장소(q) 기준
   steps.forEach((st,k)=>{ if(/^(walk|taxi)$/.test(st.type)&&!st.q2){ const nx=steps.slice(k+1).find(x=>x.q||x.v); st.q1=st.q1||'현재 위치'; st.q2=nx?(nx.v?nx.v.lat+','+nx.v.lng:nx.q):TRIP.home.q; } if(st.type==='ride'&&!st.q2){ st.q1=st.q1||st.onName||'현재 위치'; st.q2=st.offName||TRIP.home.q; } });
   const lastPlaceAi=(()=>{ let r=-1; anchors.forEach((k,ai)=>{ if(steps[k].place!=='숙소') r=ai; }); return r; })();

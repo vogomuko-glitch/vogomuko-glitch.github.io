@@ -438,3 +438,15 @@ body.cards{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 html.scrolled .days{max-height:0;opacity:0;padding:0}
 html.scrolled .pbar{padding-top:8px}
 @media (prefers-reduced-motion:reduce){.days{transition:none}}
+
+/* 현장 표지 색 + 한글 읽기 */
+:root{--m-loop:#f08300;--m-flat:#1e63b5;--m-kyotobus:#b8925a;--m-ltd:#d32f2f;--m-jr:#1e63b5;--m-kintetsu:#b71c1c;--m-taxi:#6b7075;--m-walk:#a7adb3}
+.row.m-loop{--mc:var(--m-loop)} .row.m-flat{--mc:var(--m-flat)} .row.m-ltd{--mc:var(--m-ltd)}
+.mline .m-loop{--mc:var(--m-loop)} .mline .m-flat{--mc:var(--m-flat)} .mline .m-ltd{--mc:var(--m-ltd)}
+.kj{display:inline}
+.kj b{font-weight:700;color:var(--t1)}
+.kj i{font-style:normal;font-size:.82em;color:var(--t2);margin-left:4px}
+.node .kj b{font-size:16px}
+.bul .kj b{font-weight:700}
+.dsum .big b{font-size:22px}
+.dsum .big span{font-size:13px;color:var(--t2)}
