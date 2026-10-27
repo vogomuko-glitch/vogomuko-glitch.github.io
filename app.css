@@ -474,3 +474,11 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 .node .lbl{margin-left:auto}
 .node.off::before{top:12px;margin-top:0}
 .bl .tm{margin-left:auto}
+/* v7.1: 단어 중간에서 안 끊기게, 오른쪽 여백 */
+.col,.rbd,.bul li,.kv2 .vl,.intro,.node,.dsum,.stop,.hl,.bl{word-break:keep-all;overflow-wrap:break-word}
+.kj{display:inline-block;max-width:100%;vertical-align:baseline}
+.rbd{padding-right:28px}
+.dsum,.dl{padding-right:20px}
+.bul li{line-height:1.6}
+.kv2{line-height:1.6}
+.kj b,.kj i{white-space:nowrap}
