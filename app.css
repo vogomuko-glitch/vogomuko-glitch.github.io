@@ -585,3 +585,5 @@ html.scrolled .pbar{padding-top:8px}
 .day .dcb{margin-left:-2px;margin-right:-2px}
 .day small{font-size:10.5px}
 .day b{font-size:15px}
+.cv{position:relative}
+.cv .swap{position:absolute;right:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--ln);padding:5px 9px;font-size:12px;color:var(--t1);border-radius:4px;z-index:2}

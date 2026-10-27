@@ -204,7 +204,7 @@ function rowHTML(s,k,n){
   const intro=P&&P.intro?`<p class="intro">${koify(P.intro)}${P.note?`<span class="note">${koify(P.note)}</span>`:''}</p>`:'';
   const bul=s.lines&&s.lines.length?`<ul class="bul">${s.lines.map(l=>`<li>${mdfmt(l)}</li>`).join('')}</ul>`:'';
   let img='';
-  if(CAN_EMBED&&s.v){ img=`<div class="cv"><div class="ph">로드뷰</div><iframe title="장면" data-src="${svurl(s.v.lat,s.v.lng,s.v.h||0)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${esc(s.v.cap||'')}</span></div>`; }
+  if(CAN_EMBED&&s.v){ const useMap=s.v.map===true; img=`<div class="cv ${useMap?'ismap':''}"><div class="ph">${useMap?'지도':'로드뷰'}</div><iframe title="장면" data-src="${useMap?mapurl(s.v.lat+','+s.v.lng):svurl(s.v.lat,s.v.lng,s.v.h||0)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${esc(s.v.cap||'')}</span><button class="swap" data-lat="${s.v.lat}" data-lng="${s.v.lng}" data-h="${s.v.h||0}" data-map="${useMap?1:0}">${ms(useMap?'streetview':'map','s')}${useMap?'로드뷰':'지도'}</button></div>`; }
   const links=[];
   if(s.type==='ride'||s.type==='walk'||s.type==='taxi'){ links.push(`<a class="live" target="_blank" rel="noopener" href="${gdir(s.q1||(s.onName||''),s.q2||(s.offName||s.q||''),s.type==='taxi'?'driving':s.type==='walk'?'walking':'transit')}">${ms('directions','s')}${s.type==='ride'?'실시간 도착':'구글맵 길찾기'}</a>`); }
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
@@ -267,6 +267,7 @@ function renderCards(day){
   let raf=0; window.onscroll=()=>{ if(!raf) raf=requestAnimationFrame(()=>{raf=0; const y=window.scrollY; const h=document.documentElement; if(y>140&&!h.classList.contains('scrolled')) h.classList.add('scrolled'); else if(y<30&&h.classList.contains('scrolled')) h.classList.remove('scrolled'); pick();}); };
   const jump=ai=>{ const el=$('#g'+ai); window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-hdr()+6,behavior:'smooth'}); };
   pb.querySelectorAll('.pb').forEach((b,i)=>b.onclick=()=>jump(i));
+  document.querySelectorAll('.swap').forEach(b=>b.onclick=()=>{ const cv=b.closest('.cv'); const f=cv.querySelector('iframe'); const toMap=b.dataset.map!=='1'; f.src=toMap?mapurl(b.dataset.lat+','+b.dataset.lng):svurl(b.dataset.lat,b.dataset.lng,b.dataset.h); b.dataset.map=toMap?'1':'0'; b.innerHTML=ms(toMap?'streetview':'map','s')+(toMap?'로드뷰':'지도'); cv.classList.toggle('ismap',toMap); });
   document.querySelectorAll('.say').forEach(b=>b.onclick=()=>{ const ph=TRIP.phrases[+b.dataset.say]; openSheet(`<h3>이거 보여줘</h3><p class="lead">${esc(ph[0])}</p><div class="bigsay">${esc(ph[1])}</div><p style="color:var(--accent);font-size:16px">${esc(ph[2])}</p>`); });
   document.querySelectorAll('.lost').forEach(b=>b.onclick=()=>{ const s=steps[+b.dataset.k]; openSheet(`<h3>길 잃었을 때</h3><p class="lead">당황하지 말고 둘 중 하나.</p>
     <a class="cta" target="_blank" rel="noopener" href="${s.v?gdir('현재 위치',s.v.lat+','+s.v.lng):gdir('현재 위치',s.q||s.a)}">${ms('directions','s')} ${esc(s.place||'가려던 곳')}으로 길찾기</a>
