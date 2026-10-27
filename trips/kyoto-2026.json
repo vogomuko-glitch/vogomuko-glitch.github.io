@@ -3948,6 +3948,20 @@
     ]
    ],
    "city2": "오사카 · 귀국"
+  },
+  {
+   "id": "d1106",
+   "d": "11/6",
+   "w": "금",
+   "title": "",
+   "city": "",
+   "home": "",
+   "sunset": "17:00",
+   "color": "#111111",
+   "text": "#fff",
+   "coverPlaces": [],
+   "steps": [],
+   "must": []
   }
  ],
  "places": {
@@ -4845,13 +4859,6 @@
    "JAPAN / 2026"
   ],
   "title": "KYOTO",
-  "footer": "KYOTO · INE · NARA · OSAKA",
-  "extra": {
-   "date": "11.06",
-   "week": "FRI",
-   "city": "열린 일정",
-   "color": "#111111",
-   "text": "#fff"
-  }
+  "footer": "KYOTO · INE · NARA · OSAKA"
  }
 }

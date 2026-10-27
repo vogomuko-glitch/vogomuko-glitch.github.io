@@ -581,3 +581,7 @@ html.scrolled .pbar{padding-top:8px}
 .days{display:flex}
 .day{flex:1 1 0;min-width:0;padding:8px 4px 0}
 .day .dcb{margin-left:-4px;margin-right:-4px}
+.day{padding-left:2px;padding-right:2px}
+.day .dcb{margin-left:-2px;margin-right:-2px}
+.day small{font-size:10.5px}
+.day b{font-size:15px}

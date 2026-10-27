@@ -101,6 +101,7 @@ function renderTrip(){
   $('#bHome').onclick=()=>setView('home'); $('#bInfo').onclick=()=>openSheet(`<h3>${esc(TRIP.title)}</h3><p class="lead">${esc(TRIP.dates)} · ${esc(TRIP.tzNote||TRIP.timezone)}</p>${(TRIP.info||[]).map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p>${k.sub?`<small>${esc(k.sub)}</small>`:''}</div></div>`).join('')}`);
   const day=TRIP.days.find(d=>d.id===cur);
   document.body.classList.remove('cards'); window.onscroll=null; const pb0=$('#pbar'); if(pb0) pb0.hidden=true;
+  if(!day.steps||!day.steps.length){ document.body.classList.add('cards'); $('#main').innerHTML=`<div class="col"><p class="end" style="padding:60px 0;color:var(--t2)">아직 비어 있음</p></div>`; const pb=$('#pbar'); if(pb) pb.hidden=true; renderBar(); return; }
   if(mode==='cards'&&day.steps&&day.steps.length){ renderCards(day); return; }
   const nv=day.items.filter(i=>i.st==='v'||i.st==='est').length, np=day.items.filter(i=>i.k==='p').length;
   let h=`<div class="dh"><h2>${esc(day.title)}</h2><div class="city">${esc(day.city)}</div>
@@ -315,7 +316,7 @@ function renderStay(){
     </section>
     <section class="sum">
       <div class="sl">6일 한눈에</div>
-      ${TRIP.days.map(d=>`<button class="sd" data-id="${d.id}" style="--dc:${esc(d.color||'#000')}"><i class="sdc"></i><div class="sdb">
+      ${TRIP.days.filter(d=>d.steps&&d.steps.length).map(d=>`<button class="sd" data-id="${d.id}" style="--dc:${esc(d.color||'#000')}"><i class="sdc"></i><div class="sdb">
         <div class="sdh"><b class="num">${esc(d.d)}</b><span>${esc(d.w)}</span><span class="num sdt">${esc((d.steps.find(s=>s.t)||{}).t||'')} → ${esc(endT(d))} ${endL(d)}</span></div>
         <div class="sdp">${anchors(d).map(esc).join(' · ')}</div>
         ${(d.must||[]).length?`<ul class="sdm">${d.must.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:''}
