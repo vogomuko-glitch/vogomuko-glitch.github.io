@@ -286,7 +286,7 @@ function renderCover(){
   const pill=(d,i)=>{ const date=d.d.replace('/','.').replace(/^(\d)\./,'$1.').replace(/^(\d{2})\.(\d)$/,'$1.0$2'); const wk=W[(d.w||'').slice(0,1)]||'';
     return `<article class="jday" style="--color:${esc(d.color)};--text:${esc(d.text||'#171717')}"><button class="jt" data-i="${i}" aria-expanded="false"><span class="jd">${date} <span class="jw">${wk}</span></span><span></span><span class="jsign">+</span></button>
       <div class="jr"><div class="jri"><ol class="jpl">${(d.coverPlaces||[]).map(p=>`<li><span class="jen">${esc(p[0])}</span><div class="jloc"><span lang="ja">${esc(p[1])}</span><span>${esc(p[2])}</span></div></li>`).join('')}</ol>
-      <div class="jfoot"><button class="jgo" data-id="${d.id}">${esc(d.d)} 일정 보기 ↗</button><button class="jclose">접기 ↑</button></div></div></div></article>`; };
+      <div class="jfoot"><span></span><button class="jgo" data-id="${d.id}">${esc(d.d)} 일정 보기 ↗</button></div></div></div></article>`; };
   const ex=c.extra?`<article class="jday" style="--color:${esc(c.extra.color)};--text:${esc(c.extra.text||'#fff')}"><div class="jt static"><span class="jd">${esc(c.extra.date)} <span class="jw">${esc(c.extra.week)}</span></span><span class="jcity">${esc(c.extra.city)}</span><span></span></div></article>`:'';
   $('#main').innerHTML=`<section class="journal"><header class="mast"><span>${esc((c.masthead||[])[0]||'')}</span><span>${esc((c.masthead||[])[1]||'')}</span></header>
     <div class="hero"><h1 class="ct">${esc(c.title||TRIP.title)}</h1></div><div class="jspace"></div>
@@ -295,7 +295,7 @@ function renderCover(){
   const cards=[...document.querySelectorAll('.jday')];
   const setDay=(idx,open)=>{ cards.forEach((cd,i)=>{ const on=i===idx&&open; cd.classList.toggle('open',on); const sg=cd.querySelector('.jsign'); if(sg) sg.textContent=on?'−':'+'; const bt=cd.querySelector('.jt'); if(bt) bt.setAttribute('aria-expanded',String(on)); }); $('.journal').classList.toggle('has-open',open); };
   document.querySelectorAll('.jt:not(.static)').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; setDay(i,!cards[i].classList.contains('open')); });
-  document.querySelectorAll('.jclose').forEach(b=>b.onclick=()=>setDay(-1,false));
+  cards.forEach((cd,i)=>{ cd.addEventListener('click',e=>{ if(e.target.closest('.jgo')) return; if(cd.classList.contains('open')&&!e.target.closest('.jt')) setDay(-1,false); }); });
   document.querySelectorAll('.jgo').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);setView('days');});
   renderBar();
 }
