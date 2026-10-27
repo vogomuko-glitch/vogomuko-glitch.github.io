@@ -164,25 +164,39 @@ function calcRows(){
 /* ---------- 리허설: 세로로 쭉, 왼쪽 점이 스크롤 따라 움직임 ---------- */
 let stepIdx=LS.get('trip.step',{});
 /* ---------- 리허설 v4: 한 덩어리 = 한 장소. 안에 동작 줄들. ---------- */
+const mdfmt=x=>esc(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
 function rowHTML(s,k,n){
   const [tn,ti]=stepLabel(s); const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
+  const P=(TRIP.places||{})[s.pid];
+  const tm=(s.t&&!s.place)?`<span class="tm num">${esc(s.t)}</span>`:'';
   let head='';
   if(s.type==='ride'){
-    head=`<div class="r1">${s.line?`<span class="line">${esc(s.line)}</span>`:''}<b>${tn}</b>${s.dur?` ${esc(s.dur)}`:''}${s.fare?`<span class="dot">·</span>${esc(s.fare)}`:''}${s.t?`<span class="tm num">${esc(s.t)}</span>`:''}</div>
-          ${(s.on||s.off)?`<div class="r2">${s.on?esc(s.on):''}${s.on&&s.off?' <span class="arr">→</span> ':''}${s.off?esc(s.off):''}${s.stops?` <span class="dim">(${esc(s.stops)})</span>`:''}</div>`:''}`;
+    head=`${s.onName?`<div class="node"><b>${esc(s.onName)}</b><span>승차</span>${s.onSub?`<em>${esc(s.onSub)}</em>`:''}${tm}</div>`:''}
+      <div class="bl"><span class="badge">${esc(s.line||tn)}</span><span class="sub">${esc(s.kind||tn)}</span>${!s.onName?tm:''}</div>
+      <div class="sub2">${[s.stops?esc(s.stops)+' 이동':'',s.dur?esc(s.dur):'',s.fare?esc(s.fare):''].filter(Boolean).join(' · ')}</div>`;
+  } else if(s.type==='walk'){
+    head=`<div class="hl"><b>도보${s.dur?' '+esc(s.dur):''}</b>${tm}</div>`;
+  } else if(s.type==='taxi'){
+    head=`<div class="hl"><b>택시${s.dur?' '+esc(s.dur):''}</b>${s.fare?`<span class="sub">${esc(s.fare)}</span>`:''}${tm}</div>`;
   } else {
-    head=`<div class="r1"><b>${tn}</b>${s.dur?` ${esc(s.dur)}`:''}${s.fare?`<span class="dot">·</span>${esc(s.fare)}`:''}${(s.t&&!s.place)?`<span class="tm num">${esc(s.t)}</span>`:''}</div>`;
+    head=`<div class="hl"><b>${tn}${s.dur?' '+esc(s.dur):''}</b>${s.fare?`<span class="sub">${esc(s.fare)}</span>`:''}${tm}</div>`;
   }
+  const intro=P&&P.intro?`<p class="intro">${esc(P.intro)}${P.note?`<span class="note">${esc(P.note)}</span>`:''}</p>`:'';
+  const bul=s.lines&&s.lines.length?`<ul class="bul">${s.lines.map(l=>`<li>${mdfmt(l)}</li>`).join('')}</ul>`:'';
   let img='';
   if(CAN_EMBED&&s.v){ img=`<div class="cv"><div class="ph">로드뷰</div><iframe title="장면" data-src="${svurl(s.v.lat,s.v.lng,s.v.h||0)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${esc(s.v.cap||'')}</span></div>`; }
-  else if(s.v){ img=`<a class="imglink" target="_blank" rel="noopener" href="${pano(s.v.lat,s.v.lng)}">${ms('streetview','s')}${esc(s.v.cap||'로드뷰')}</a>`; }
-  const P=(TRIP.places||{})[s.pid]; const intro=P&&P.intro?`<p class="intro">${esc(P.intro)}${P.note?` <span class="dim">${esc(P.note)}</span>`:''}</p>`:'';
-  const links=P&&(P.ig||P.web)?`<div class="plinks">${P.ig?`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}@${esc(P.ig)}</a>`:''}${P.web?`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`:''}</div>`:'';
-  return `<div class="row ${P?'hasp':''}" id="s${k}" data-k="${k}">${ms(ti)}<div class="rbd">
+  const links=[];
+  if(s.type==='ride'||s.type==='walk'||s.type==='taxi'){ links.push(`<a class="live" target="_blank" rel="noopener" href="${gdir(s.q1||(s.onName||''),s.q2||(s.offName||s.q||''),s.type==='taxi'?'driving':s.type==='walk'?'walking':'transit')}">${ms('directions','s')}구글맵 실시간</a>`); }
+  if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
+  if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
+  const off=s.type==='ride'&&s.offName?`<div class="node off"><b>${esc(s.offName)}</b><span>하차</span>${s.offSub?`<em>${esc(s.offSub)}</em>`:''}</div>`:'';
+  return `<div class="row m-${s.mode||'stay'}" id="s${k}" data-k="${k}"><div class="lc">${ms(ti)}<i class="rl"></i></div><div class="rbd">
     ${head}${intro}
-    <p class="r3">${esc(s.text||[s.a,s.b,s.more].filter(Boolean).join(' '))}</p>
+    ${bul}
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
-    ${img}${links}
+    ${img}
+    ${links.length?`<div class="plinks">${links.join('')}</div>`:''}
+    ${off}
   </div></div>`;
 }
 function renderCards(day){
@@ -194,8 +208,11 @@ function renderCards(day){
   const mins=x=>{if(!x)return 0;let m=0;const h=/(\d+)\s*시간/.exec(x);if(h)m+=+h[1]*60;const mm=/(\d+)\s*분/.exec(x);if(mm)m+=+mm[1];return m;};
   const fmt=m=>m>=60?`${Math.floor(m/60)}시간${m%60?' '+m%60+'분':''}`:`${m}분`;
   const walk=steps.filter(x=>x.type==='walk').reduce((a,x)=>a+mins(x.dur),0), move=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>a+mins(x.dur),0);
-  const fare=steps.reduce((a,x)=>{const m=/([\d,]+)\s*엔/.exec(x.fare||'');return a+(m?+m[1].replace(/,/g,''):0);},0);
-  const summ=`<div class="dsum"><span><b>${fmt(move+walk)}</b> 이동</span><span>도boo</span></div>`.replace('<span>도boo</span>',`<span>도보 <b>${fmt(walk)}</b></span>${fare?`<span>교통비 약 <b>${fare.toLocaleString()}엔</b></span>`:''}`);
+  const fare=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>{const m=/([\d,]+)\s*엔/.exec(x.fare||'');return a+(m?+m[1].replace(/,/g,''):0);},0);
+  const rides=steps.filter(x=>x.type==='ride').length;
+  const summ=`<div class="dsum"><div class="big"><b class="num">총 ${fmt(move+walk)}</b>${day.home?`<span class="num">도착 ${esc(day.home.replace(/\s*숙소.*$/,''))}</span>`:''}</div><div class="line2">${[fare?`교통비 약 ${fare.toLocaleString()}엔`:'',rides?`대중교통 ${rides}회`:'',`도보 ${fmt(walk)}`].filter(Boolean).join(' · ')}</div></div>`;
+  // 이동 줄 길찾기 목적지 보강: 다음 장소(q) 기준
+  steps.forEach((st,k)=>{ if(/^(walk|taxi)$/.test(st.type)&&!st.q2){ const nx=steps.slice(k+1).find(x=>x.q||x.v); st.q1=st.q1||'현재 위치'; st.q2=nx?(nx.v?nx.v.lat+','+nx.v.lng:nx.q):TRIP.home.q; } if(st.type==='ride'&&!st.q2){ st.q1=st.q1||st.onName||'현재 위치'; st.q2=st.offName||TRIP.home.q; } });
   const body=groups.map(g=>{ const p=steps[g.k];
     const rows=[]; for(let k=g.from;k<g.to;k++) rows.push(rowHTML(steps[k],k,n));
     const q=p.v?gmap(p.v.lat+','+p.v.lng):gmap(p.q||p.a);
