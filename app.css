@@ -496,3 +496,5 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 .pb.opt i{border-style:solid;border-color:var(--ln)}
 .pb.opt span{color:var(--t2)}
 .pseg,.pseg.past{border-top:1px solid var(--ln)}
+:root{--m-tankai:#2a8a6e}
+.row.m-tankai{--mc:var(--m-tankai)} .mline .m-tankai{--mc:var(--m-tankai)}

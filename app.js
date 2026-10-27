@@ -83,7 +83,7 @@ function todayIndex(){ const k=now().key; const i=TRIP.days.findIndex(d=>d.d===k
 let mode='cards'; // cards=리허설(기본) / list=전체 보기
 const TYPE={walk:['도보','directions_walk'],ride:['탑승','directions_bus'],taxi:['택시','local_taxi'],buy:['창구','confirmation_number'],see:['관람','visibility'],do:['할 일','task_alt'],arrive:['도착','flag']};
 const RIDE={directions_bus:'버스',subway:'지하철',train:'열차',tram:'전철',directions_boat:'배'};
-const MODEICON={walk:'directions_walk',taxi:'local_taxi',citybus:'directions_bus',loop:'directions_bus',flat:'directions_bus',kyotobus:'directions_bus',bus:'directions_bus','subway-k':'subway','subway-y':'subway','subway-t':'subway','subway-m':'subway',jr:'train',ltd:'train',kintetsu:'train',nankai:'train'};
+const MODEICON={walk:'directions_walk',taxi:'local_taxi',citybus:'directions_bus',loop:'directions_bus',flat:'directions_bus',kyotobus:'directions_bus',tankai:'directions_bus',bus:'directions_bus','subway-k':'subway','subway-y':'subway','subway-t':'subway','subway-m':'subway',jr:'train',ltd:'train',kintetsu:'train',nankai:'train'};
 function stepLabel(s){ // 한국 앱에서 익숙한 말로
   if(s.label) return [s.label,(TYPE[s.type]||TYPE.do)[1]];
   if(s.type==='ride'){ const m=/(バス|버스)/.test(s.a)?'directions_bus':/(지하철|가라스마선|요츠바시線|요츠바시선|四つ橋|肥後橋)/.test(s.a)?'subway':/(하루카|하시다테|新快速|신쾌속|긴테쓰|急行|JR)/.test(s.a)?'train':'directions_bus'; return [RIDE[m],m]; }
@@ -225,7 +225,7 @@ function renderCards(day){
   const fare=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>{const m=/([\d,]+)\s*엔/.exec(x.fare||'');return a+(m?+m[1].replace(/,/g,''):0);},0);
   const rides=steps.filter(x=>x.type==='ride').length;
   const cnt={}; steps.forEach(x=>{ if(/^(ride|taxi)$/.test(x.type)) cnt[x.mode]=(cnt[x.mode]||0)+1; });
-  const MN={citybus:'버스',loop:'버스',flat:'버스',kyotobus:'교토버스',bus:'버스','subway-k':'지하철','subway-t':'지하철','subway-y':'지하철','subway-m':'지하철',jr:'JR',ltd:'특급',kintetsu:'긴테쓰',nankai:'난카이',taxi:'택시'};
+  const MN={citybus:'버스',loop:'버스',flat:'버스',kyotobus:'교토버스',tankai:'단카이버스',bus:'버스','subway-k':'지하철','subway-t':'지하철','subway-y':'지하철','subway-m':'지하철',jr:'JR',ltd:'특급',kintetsu:'긴테쓰',nankai:'난카이',taxi:'택시'};
   const modes=`<div class="mline">${Object.entries(cnt).map(([m,c])=>`<span class="m-${m}"><i class="ic">${ms(MODEICON[m]||'directions_bus','s')}</i>${MN[m]||m} ${c}</span>`).join('')}<span class="m-walk"><i class="ic">${ms('directions_walk','s')}</i>도보 ${fmt(walk)}</span></div>`;
   const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x||'');return m?+m[1]*60+ +m[2]:null;}, f2=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
   const dl=(day.ret&&day.target)?`<div class="line3">${ms('wb_twilight','s')}해 짐 ${esc(day.sunset||'17:00')} · <b>${esc(day.target)}</b> 귀가하려면 마지막 장소 <b>${f2(hm(day.target)-day.ret)}</b> 출발${day.max?` · 최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발`:''}${day.dlNote?`<span class="dim"> · ${esc(day.dlNote)}</span>`:''}</div>`:'';
