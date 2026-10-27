@@ -230,9 +230,9 @@ function renderCards(day){
   const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x||'');return m?+m[1]*60+ +m[2]:null;}, f2=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
   const dl=(day.ret&&day.target)?`<div class="line3">${ms('wb_twilight','s')}해 짐 ${esc(day.sunset||'17:00')} · <b>${esc(day.target)}</b> 귀가하려면 마지막 장소 <b>${f2(hm(day.target)-day.ret)}</b> 출발${day.max?` · 최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발`:''}${day.dlNote?`<span class="dim"> · ${esc(day.dlNote)}</span>`:''}</div>`:'';
   const lastT=[...steps].reverse().find(x=>x.t); const endT=day.home?day.home.replace(/\s*숙소.*$/,''):(lastT?lastT.t:''); const endL=day.home?'숙소 도착':(lastT&&lastT.place?lastT.place+' 도착':'');
-  const summ=`<div class="dsum"><div class="big"><b class="num">${esc((steps.find(x=>x.t)||{}).t||'')} → ${esc(endT)}</b><span>${esc(endL)}</span></div><div class="line2">${fare?`교통비 약 ${fare.toLocaleString()}엔`:''}</div>${modes}${dl}</div>`;
+  const summ=`<div class="dsum"><div class="big"><b class="num">${esc((steps.find(x=>x.t)||{}).t||'')} → ${esc(endT)}</b><span>${esc(endL)}</span></div><div class="line2">${fare?`교통비 약 ${fare.toLocaleString()}엔 (사전 구매 표 포함)`:''}</div>${modes}${dl}</div>`;
   // 이동 줄 길찾기 목적지 보강: 다음 장소(q) 기준
-  steps.forEach((st,k)=>{ if(/^(walk|taxi)$/.test(st.type)&&!st.q2){ const nx=steps.slice(k+1).find(x=>x.q||x.v); st.q1=st.q1||'현재 위치'; st.q2=nx?(nx.v?nx.v.lat+','+nx.v.lng:nx.q):TRIP.home.q; } if(st.type==='ride'&&!st.q2){ st.q1=st.q1||st.onName||'현재 위치'; st.q2=st.offName||TRIP.home.q; } });
+  steps.forEach((st,k)=>{ if(/^(walk|taxi)$/.test(st.type)&&!st.q2){ const nx=steps.slice(k+1).find(x=>x.q||x.v||x.onName); st.q1=st.q1||'현재 위치'; st.q2=st.q||(nx?(nx.v?nx.v.lat+','+nx.v.lng:(nx.q||nx.onName)):TRIP.home.q); } if(st.type==='ride'&&!st.q2){ st.q1=st.q1||st.onName||'현재 위치'; st.q2=st.offName||TRIP.home.q; } });
   const lastPlaceAi=(()=>{ let r=-1; anchors.forEach((k,ai)=>{ if(steps[k].place!=='숙소') r=ai; }); return r; })();
   const body=groups.map(g=>{ const p=steps[g.k];
     const rows=[]; for(let k=g.from;k<g.to;k++) rows.push(rowHTML(steps[k],k,n));
