@@ -82,6 +82,7 @@ function todayIndex(){ const k=now().key; const i=TRIP.days.findIndex(d=>d.d===k
 let mode=LS.get('trip.mode','cards'); // cards=리허설(기본) / list=전체 보기
 const TYPE={walk:['도보','directions_walk'],ride:['탑승','directions_bus'],taxi:['택시','local_taxi'],buy:['창구','confirmation_number'],see:['관람','visibility'],do:['할 일','task_alt'],arrive:['도착','flag']};
 const RIDE={directions_bus:'버스',subway:'지하철',train:'열차',tram:'전철',directions_boat:'배'};
+const MODEICON={walk:'directions_walk',taxi:'local_taxi',citybus:'directions_bus',kyotobus:'directions_bus',bus:'directions_bus','subway-k':'subway','subway-y':'subway','subway-t':'subway',jr:'train',kintetsu:'train'};
 function stepLabel(s){ // 한국 앱에서 익숙한 말로
   if(s.label) return [s.label,(TYPE[s.type]||TYPE.do)[1]];
   if(s.type==='ride'){ const m=/(バス|버스)/.test(s.a)?'directions_bus':/(지하철|가라스마선|요츠바시線|요츠바시선|四つ橋|肥後橋)/.test(s.a)?'subway':/(하루카|하시다테|新快速|신쾌속|긴테쓰|急行|JR)/.test(s.a)?'train':'directions_bus'; return [RIDE[m],m]; }
@@ -166,7 +167,7 @@ let stepIdx=LS.get('trip.step',{});
 /* ---------- 리허설 v4: 한 덩어리 = 한 장소. 안에 동작 줄들. ---------- */
 const mdfmt=x=>esc(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
 function rowHTML(s,k,n){
-  const [tn,ti]=stepLabel(s); const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
+  let [tn,ti]=stepLabel(s); if(MODEICON[s.mode]) ti=MODEICON[s.mode]; const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
   const P=(TRIP.places||{})[s.pid];
   const tm=(s.t&&!s.place)?`<span class="tm num">${esc(s.t)}</span>`:'';
   let head='';

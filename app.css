@@ -331,7 +331,7 @@ body.cards{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .plinks a{display:inline-flex;align-items:center;gap:4px;color:var(--accent)}
 
 /* ===== v5: 네이버지도 길찾기 표기 ===== */
-:root{--t1:#222;--t2:#8c8c8c;--ln:#e0e0e0;--m-walk:#a7adb3;--m-citybus:#2e8b57;--m-kyotobus:#8b5a2b;--m-bus:#2e8b57;--m-subway-k:#37a34a;--m-subway-y:#0a7bbd;--m-jr:#0072bc;--m-kintetsu:#c8102e;--m-taxi:#e0a800;--m-stay:#222}
+:root{--t1:#222;--t2:#8c8c8c;--ln:#e0e0e0;--m-walk:#a7adb3;--m-citybus:#2e8b57;--m-kyotobus:#8b5a2b;--m-bus:#2e8b57;--m-subway-k:#37a34a;--m-subway-t:#e8711a;--m-subway-y:#0a7bbd;--m-jr:#0072bc;--m-kintetsu:#c8102e;--m-taxi:#e0a800;--m-stay:#222}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--t1:#eceef0;--t2:#9aa1a7;--ln:#2a2f34;--m-stay:#eceef0}}
 :root[data-theme="dark"]{--t1:#eceef0;--t2:#9aa1a7;--ln:#2a2f34;--m-stay:#eceef0}
 .col .grp{border-top:1px solid var(--ln);padding:18px 0 10px;margin:0 0 18px}
@@ -346,7 +346,7 @@ body.cards{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .row.m-stay .rl{border-left:1px solid var(--ln)}
 .row:last-of-type .rl{display:none}
 .row.m-walk{--mc:var(--m-walk)} .row.m-citybus{--mc:var(--m-citybus)} .row.m-kyotobus{--mc:var(--m-kyotobus)} .row.m-bus{--mc:var(--m-bus)}
-.row.m-subway-k{--mc:var(--m-subway-k)} .row.m-subway-y{--mc:var(--m-subway-y)} .row.m-jr{--mc:var(--m-jr)} .row.m-kintetsu{--mc:var(--m-kintetsu)} .row.m-taxi{--mc:var(--m-taxi)} .row.m-stay{--mc:var(--m-stay)}
+.row.m-subway-k{--mc:var(--m-subway-k)} .row.m-subway-t{--mc:var(--m-subway-t)} .row.m-subway-y{--mc:var(--m-subway-y)} .row.m-jr{--mc:var(--m-jr)} .row.m-kintetsu{--mc:var(--m-kintetsu)} .row.m-taxi{--mc:var(--m-taxi)} .row.m-stay{--mc:var(--m-stay)}
 .row.m-walk .lc>.ms,.row.m-taxi .lc>.ms{color:var(--t1)}
 .rbd{gap:6px}
 .hl,.node,.bl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
