@@ -490,3 +490,5 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 .row.has-off .rl{margin-bottom:12px}
 :root{--m-subway-m:#e5171f}
 .row.m-subway-m{--mc:var(--m-subway-m)} .mline .m-subway-m{--mc:var(--m-subway-m)}
+:root{--m-nankai:#0b6ab3}
+.row.m-nankai{--mc:var(--m-nankai)} .mline .m-nankai{--mc:var(--m-nankai)}
