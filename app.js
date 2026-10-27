@@ -205,20 +205,24 @@ function renderCards(day){
   const anchors=steps.map((st,k)=>st.place?k:-1).filter(k=>k>=0);
   // 그룹: 장소(anchor)부터 다음 장소 전까지. 첫 장소 전 단계는 첫 그룹에 포함
   const groups=[]; anchors.forEach((k,ai)=>{ const from=ai===0?0:k, to=ai+1<anchors.length?anchors[ai+1]:n; groups.push({k,ai,from,to}); });
-  const rail=`<aside class="rail" aria-label="오늘 장소">${anchors.map((k,ai)=>`<button class="rd" data-k="${k}"><b></b><span>${esc(steps[k].place)}</span></button>${ai<anchors.length-1?`<i class="seg" data-ai="${ai}"></i>`:''}`).join('')}</aside>`;
+  const rail=`<aside class="rail" aria-label="오늘 장소">${anchors.map((k,ai)=>`<button class="rd ${steps[k].opt?'opt':''}" data-k="${k}"><b></b><span>${esc(steps[k].place)}</span></button>${ai<anchors.length-1?`<i class="seg" data-ai="${ai}"></i>`:''}`).join('')}</aside>`;
   const mins=x=>{if(!x)return 0;let m=0;const h=/(\d+)\s*시간/.exec(x);if(h)m+=+h[1]*60;const mm=/(\d+)\s*분/.exec(x);if(mm)m+=+mm[1];return m;};
   const fmt=m=>m>=60?`${Math.floor(m/60)}시간${m%60?' '+m%60+'분':''}`:`${m}분`;
   const walk=steps.filter(x=>x.type==='walk').reduce((a,x)=>a+mins(x.dur),0), move=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>a+mins(x.dur),0);
   const fare=steps.filter(x=>/^(ride|taxi)$/.test(x.type)).reduce((a,x)=>{const m=/([\d,]+)\s*엔/.exec(x.fare||'');return a+(m?+m[1].replace(/,/g,''):0);},0);
   const rides=steps.filter(x=>x.type==='ride').length;
-  const summ=`<div class="dsum"><div class="big"><b class="num">총 ${fmt(move+walk)}</b>${day.home?`<span class="num">도착 ${esc(day.home.replace(/\s*숙소.*$/,''))}</span>`:''}</div><div class="line2">${[fare?`교통비 약 ${fare.toLocaleString()}엔`:'',rides?`대중교통 ${rides}회`:'',`도보 ${fmt(walk)}`].filter(Boolean).join(' · ')}</div></div>`;
+  const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x||'');return m?+m[1]*60+ +m[2]:null;}, f2=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+  const dl=(day.ret&&day.target)?`<div class="line3">${ms('wb_twilight','s')}해 짐 ${esc(day.sunset||'17:00')} · <b>${esc(day.target)}</b> 귀가하려면 마지막 장소 <b>${f2(hm(day.target)-day.ret)}</b> 출발${day.max?` · 최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발`:''}${day.dlNote?`<span class="dim"> · ${esc(day.dlNote)}</span>`:''}</div>`:'';
+  const summ=`<div class="dsum"><div class="big"><b class="num">총 ${fmt(move+walk)}</b>${day.home?`<span class="num">도착 ${esc(day.home.replace(/\s*숙소.*$/,''))}</span>`:''}</div><div class="line2">${[fare?`교통비 약 ${fare.toLocaleString()}엔`:'',rides?`대중교통 ${rides}회`:'',`도보 ${fmt(walk)}`].filter(Boolean).join(' · ')}</div>${dl}</div>`;
   // 이동 줄 길찾기 목적지 보강: 다음 장소(q) 기준
   steps.forEach((st,k)=>{ if(/^(walk|taxi)$/.test(st.type)&&!st.q2){ const nx=steps.slice(k+1).find(x=>x.q||x.v); st.q1=st.q1||'현재 위치'; st.q2=nx?(nx.v?nx.v.lat+','+nx.v.lng:nx.q):TRIP.home.q; } if(st.type==='ride'&&!st.q2){ st.q1=st.q1||st.onName||'현재 위치'; st.q2=st.offName||TRIP.home.q; } });
+  const lastPlaceAi=(()=>{ let r=-1; anchors.forEach((k,ai)=>{ if(steps[k].place!=='숙소') r=ai; }); return r; })();
   const body=groups.map(g=>{ const p=steps[g.k];
     const rows=[]; for(let k=g.from;k<g.to;k++) rows.push(rowHTML(steps[k],k,n));
     const q=p.v?gmap(p.v.lat+','+p.v.lng):gmap(p.q||p.a);
-    return `<section class="grp" id="g${g.ai}" data-ai="${g.ai}">
-      <h3 class="stop"><span>${esc(p.place)}</span>${p.t?`<small class="num">${esc(p.t)}</small>`:''}</h3>
+    const dlb=(g.ai===lastPlaceAi&&day.ret&&day.target)?`<div class="dl">${ms('schedule','s')}<div><b>${esc(day.target)} 귀가 → 여기서 ${f2(hm(day.target)-day.ret)} 출발</b>${day.max?`<span>최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발</span>`:''}</div></div>`:'';
+    return `<section class="grp ${p.opt?'opt':''}" id="g${g.ai}" data-ai="${g.ai}">
+      <h3 class="stop"><span>${esc(p.place)}${p.opt?'<i class="optag">선택</i>':''}</span>${p.t?`<small class="num">${esc(p.t)}</small>`:''}</h3>${dlb}
       ${rows.join('')}
       <div class="gft"><a target="_blank" rel="noopener" href="${q}">${ms('map','s')}${esc(p.place)} 지도</a><button class="lost" data-k="${g.k}">${ms('sos','s')}길 잃음</button></div>
     </section>`; }).join('');
@@ -251,7 +255,8 @@ function renderCards(day){
 /* ---------- 하단 바 / 시트 ---------- */
 function renderBar(){
   const b=$('#bar'); b.hidden=false;
-  b.innerHTML=`<div class="wrap"><button id="bKit">${ms('contactless')}<span>교통</span></button><button id="bSay">${ms('translate')}<span>한마디</span></button><a href="${gdir('현재 위치',TRIP.home.q)}" target="_blank" rel="noopener">${ms('home')}<span>숙소</span></a></div>`;
+  b.innerHTML=`<div class="wrap"><button id="bPrep">${ms('checklist')}<span>준비</span></button><button id="bKit">${ms('contactless')}<span>교통</span></button><button id="bSay">${ms('translate')}<span>한마디</span></button><a href="${gdir('현재 위치',TRIP.home.q)}" target="_blank" rel="noopener">${ms('home')}<span>숙소</span></a></div>`;
+  $('#bPrep').onclick=()=>openSheet(`<h3>출발 전 준비</h3><p class="lead">한국에서 끝내고 갈 것.</p>${(TRIP.prep||[]).map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p></div></div>`).join('')}`);
   $('#bKit').onclick=()=>openSheet(`<h3>교통</h3><p class="lead">${esc(TRIP.transit.card)} 하나로 거의 다 됨.</p>${TRIP.transit.kit.map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p>${k.sub?`<small>${esc(k.sub)}</small>`:''}</div></div>`).join('')}`);
   $('#bSay').onclick=()=>openSheet(`<h3>한마디</h3><p class="lead">화면 그대로 보여줘도 됨.</p>${TRIP.phrases.map(p=>`<div class="ph"><div class="ko">${esc(p[0])}</div><div class="jp">${esc(p[1])}</div><div class="ro">${esc(p[2])}</div></div>`).join('')}`);
 }
