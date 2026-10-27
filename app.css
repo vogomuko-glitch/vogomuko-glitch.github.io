@@ -488,3 +488,5 @@ html.scrolled .pbar{margin-top:0;border-top:0;padding-top:8px}
 .kj i{white-space:normal}
 /* 하차 점에서 선 끝 */
 .row.has-off .rl{margin-bottom:12px}
+:root{--m-subway-m:#e5171f}
+.row.m-subway-m{--mc:var(--m-subway-m)} .mline .m-subway-m{--mc:var(--m-subway-m)}
