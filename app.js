@@ -80,7 +80,7 @@ function newTripSheet(){
 /* ---------- 여행 화면 ---------- */
 function now(){ const n=new Date(); return {key:(n.getMonth()+1)+'/'+n.getDate(),hm:n.getHours()*60+n.getMinutes()}; }
 function todayIndex(){ const k=now().key; const i=TRIP.days.findIndex(d=>d.d===k); return i<0?0:i; }
-let mode='cards'; // cards=리허설(기본) / list=전체 보기
+let mode='cards'; let view=LS.get('trip.view','home'); // home|days|stay|prep
 const TYPE={walk:['도보','directions_walk'],ride:['탑승','directions_bus'],taxi:['택시','local_taxi'],buy:['창구','confirmation_number'],see:['관람','visibility'],do:['할 일','task_alt'],arrive:['도착','flag']};
 const RIDE={directions_bus:'버스',subway:'지하철',train:'열차',tram:'전철',directions_boat:'배'};
 const MODEICON={walk:'directions_walk',taxi:'local_taxi',citybus:'directions_bus',loop:'directions_bus',flat:'directions_bus',kyotobus:'directions_bus',tankai:'directions_bus',bus:'directions_bus','subway-k':'subway','subway-y':'subway','subway-t':'subway','subway-m':'subway',jr:'train',ltd:'train',kintetsu:'train',nankai:'train'};
@@ -89,12 +89,16 @@ function stepLabel(s){ // 한국 앱에서 익숙한 말로
   if(s.type==='ride'){ const m=/(バス|버스)/.test(s.a)?'directions_bus':/(지하철|가라스마선|요츠바시線|요츠바시선|四つ橋|肥後橋)/.test(s.a)?'subway':/(하루카|하시다테|新快速|신쾌속|긴테쓰|急行|JR)/.test(s.a)?'train':'directions_bus'; return [RIDE[m],m]; }
   return TYPE[s.type]||TYPE.do;
 }
+function setView(v){ view=v; LS.set('trip.view',v); renderTrip(); window.scrollTo(0,0); }
 function renderTrip(){
+  if(view==='home') return renderCover();
+  if(view==='stay') return renderStay();
+  if(view==='prep') return renderPrep();
   const tk=now().key;
-  $('#top').innerHTML=`<div class="top-row"><a class="ib" href="#" aria-label="여행 목록">${ms('arrow_back')}</a><h1>${esc(TRIP.title)}</h1><button class="ib r" id="bInfo" aria-label="정보">${ms('info')}</button></div>
-    <div class="days" role="tablist">${TRIP.days.map(d=>`<button role="tab" class="day ${d.id===cur?'on':''} ${d.d===tk?'today':''}" data-id="${d.id}" aria-selected="${d.id===cur}"><small>${esc(d.w)}</small><b class="num">${esc(d.d)}</b></button>`).join('')}</div><div class="pbar" id="pbar" hidden></div>`;
+  $('#top').innerHTML=`<div class="top-row"><button class="ib" id="bHome" aria-label="표지">${ms('arrow_back')}</button><h1>${esc(TRIP.title)}</h1><button class="ib r" id="bInfo" aria-label="정보">${ms('info')}</button></div>
+    <div class="days" role="tablist">${TRIP.days.map(d=>`<button role="tab" class="day ${d.id===cur?'on':''} ${d.d===tk?'today':''}" data-id="${d.id}" aria-selected="${d.id===cur}" style="--dc:${esc(d.color||'#000')}"><small>${esc(d.w)}</small><b class="num">${esc(d.d)}</b><i class="dcb"></i></button>`).join('')}</div><div class="pbar" id="pbar" hidden></div>`;
   $('#top').querySelectorAll('.day').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);renderTrip();window.scrollTo(0,0);});
-  $('#bInfo').onclick=()=>openSheet(`<h3>${esc(TRIP.title)}</h3><p class="lead">${esc(TRIP.dates)} · ${esc(TRIP.tzNote||TRIP.timezone)}</p>${(TRIP.info||[]).map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p>${k.sub?`<small>${esc(k.sub)}</small>`:''}</div></div>`).join('')}`);
+  $('#bHome').onclick=()=>setView('home'); $('#bInfo').onclick=()=>openSheet(`<h3>${esc(TRIP.title)}</h3><p class="lead">${esc(TRIP.dates)} · ${esc(TRIP.tzNote||TRIP.timezone)}</p>${(TRIP.info||[]).map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p>${k.sub?`<small>${esc(k.sub)}</small>`:''}</div></div>`).join('')}`);
   const day=TRIP.days.find(d=>d.id===cur);
   document.body.classList.remove('cards'); window.onscroll=null; const pb0=$('#pbar'); if(pb0) pb0.hidden=true;
   if(mode==='cards'&&day.steps&&day.steps.length){ renderCards(day); return; }
@@ -271,13 +275,60 @@ function renderCards(day){
   if(ai0>0&&gs[ai0]){ requestAnimationFrame(()=>{ window.scrollTo(0,gs[ai0].getBoundingClientRect().top+window.scrollY-hdr()+6); setTimeout(pick,50); }); }
 }
 
+/* ---------- 표지 / 숙소·요약 / 준비 ---------- */
+function clearShell(){ document.body.classList.remove('cards'); window.onscroll=null; document.documentElement.classList.remove('scrolled'); }
+function renderCover(){
+  clearShell();
+  $('#top').innerHTML='';
+  const c=TRIP.cover||{title:TRIP.title,sub:TRIP.dates};
+  $('#main').innerHTML=`<section class="cover"><h1 class="ct">${esc(c.title)}</h1><div class="cs num">${esc(c.sub||'')}</div>
+    <div class="bars">${TRIP.days.map(d=>`<button class="cbar" data-id="${d.id}" style="--dc:${esc(d.color||'#000')}" aria-label="${esc(d.d)} ${esc(d.title)}"></button>`).join('')}</div></section>`;
+  document.querySelectorAll('.cbar').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);setView('days');});
+  renderBar();
+}
+function renderStay(){
+  clearShell();
+  const H=TRIP.home;
+  $('#top').innerHTML=`<div class="top-row"><h1>숙소 · 6일 요약</h1></div>`;
+  const anchors=d=>d.steps.filter(s=>s.place&&!/^숙소/.test(s.place)).map(s=>s.place).filter((v,i,arr)=>arr.indexOf(v)===i);
+  const endT=d=>d.home?d.home.replace(/\s*숙소.*$/,''):(([...d.steps].reverse().find(s=>s.t)||{}).t||'');
+  const endL=d=>d.home?'숙소':'공항';
+  $('#main').innerHTML=`<div class="col">
+    <section class="stay">
+      <div class="sl">숙소</div>
+      <div class="sn">${esc(H.name)}</div>
+      <div class="sa">${esc(H.address)}</div>
+      <div class="sacts"><button class="ab" id="cpAddr">${ms('content_copy','s')}주소 복사</button><a class="ab" target="_blank" rel="noopener" href="${gdir('현재 위치',H.q,'driving')}">${ms('directions','s')}길찾기</a><a class="ab" target="_blank" rel="noopener" href="${gmap(H.q)}">${ms('map','s')}지도</a></div>
+      <div class="ssay"><div class="sl">택시 기사에게</div><div class="bigsay">${esc(TRIP.phrases[0][1])}</div><div class="sa">${esc(H.address)}</div></div>
+      <div class="sbus">${ms('directions_bus','s')}<span>정류장 ${KO(H.bus)} · 도보 5분 · 6번 ${nmHTML('京都駅',false)} · 北1 ${nmHTML('北大路',false)}</span></div>
+    </section>
+    <section class="sum">
+      <div class="sl">6일 한눈에</div>
+      ${TRIP.days.map(d=>`<button class="sd" data-id="${d.id}" style="--dc:${esc(d.color||'#000')}"><i class="sdc"></i><div class="sdb">
+        <div class="sdh"><b class="num">${esc(d.d)}</b><span>${esc(d.w)}</span><span class="num sdt">${esc((d.steps.find(s=>s.t)||{}).t||'')} → ${esc(endT(d))} ${endL(d)}</span></div>
+        <div class="sdp">${anchors(d).map(esc).join(' · ')}</div>
+        ${(d.must||[]).length?`<ul class="sdm">${d.must.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:''}
+      </div></button>`).join('')}
+    </section></div>`;
+  $('#cpAddr').onclick=()=>{ navigator.clipboard&&navigator.clipboard.writeText(H.address).then(()=>{$('#cpAddr').innerHTML=ms('check','s')+'복사됨';}); };
+  document.querySelectorAll('.sd').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);setView('days');});
+  renderBar();
+}
+function renderPrep(){
+  clearShell();
+  $('#top').innerHTML=`<div class="top-row"><h1>준비</h1></div>`;
+  $('#main').innerHTML=`<div class="col">
+    ${(TRIP.prep||[]).map(g=>`<section class="pg"><div class="sl">${esc(g.title)}</div><ul class="pl">${(g.items||[]).map(i=>`<li>${mdfmt(i)}</li>`).join('')}</ul></section>`).join('')}
+    <section class="pg"><div class="sl">보여줄 말 — 화면 그대로 보여주면 됨</div>${TRIP.phrases.map((p,i)=>`<div class="ph"><div class="ko">${i+1}. ${esc(p[0])}</div><div class="jp">${esc(p[1])}</div><div class="ro">${esc(p[2])}</div></div>`).join('')}</section>
+  </div>`;
+  renderBar();
+}
 /* ---------- 하단 바 / 시트 ---------- */
 function renderBar(){
   const b=$('#bar'); b.hidden=false;
-  b.innerHTML=`<div class="wrap"><button id="bPrep">${ms('checklist')}<span>준비</span></button><button id="bKit">${ms('contactless')}<span>교통</span></button><button id="bSay">${ms('translate')}<span>한마디</span></button><a href="${gdir('현재 위치',TRIP.home.q)}" target="_blank" rel="noopener">${ms('home')}<span>숙소</span></a></div>`;
-  $('#bPrep').onclick=()=>openSheet(`<h3>출발 전 준비</h3><p class="lead">한국에서 끝내고 갈 것.</p>${(TRIP.prep||[]).map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p></div></div>`).join('')}`);
-  $('#bKit').onclick=()=>openSheet(`<h3>교통</h3><p class="lead">${esc(TRIP.transit.card)} 하나로 거의 다 됨.</p>${TRIP.transit.kit.map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p>${k.sub?`<small>${esc(k.sub)}</small>`:''}</div></div>`).join('')}`);
-  $('#bSay').onclick=()=>openSheet(`<h3>한마디</h3><p class="lead">화면 그대로 보여줘도 됨.</p>${TRIP.phrases.map(p=>`<div class="ph"><div class="ko">${esc(p[0])}</div><div class="jp">${esc(p[1])}</div><div class="ro">${esc(p[2])}</div></div>`).join('')}`);
+  const tab=(v,ic,lb)=>`<button data-v="${v}" class="${view===v?'on':''}">${ms(ic)}<span>${lb}</span></button>`;
+  b.innerHTML=`<div class="wrap">${tab('home','home','홈')}${tab('days','route','일정')}${tab('stay','hotel','숙소·요약')}${tab('prep','checklist','준비')}</div>`;
+  b.querySelectorAll('button').forEach(x=>x.onclick=()=>setView(x.dataset.v));
 }
 const sheet=$('#sheet'), pn=$('#pn');
 function openSheet(html){ pn.innerHTML=`<div class="grab"></div>${html}<button class="close" id="cl">닫기</button>`; sheet.hidden=false; $('#cl').onclick=()=>sheet.hidden=true; }
