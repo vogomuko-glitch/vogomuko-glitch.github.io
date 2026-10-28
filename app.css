@@ -608,3 +608,9 @@ body.cards #main.cover-pad,#main{padding-bottom:calc(64px + 24px + env(safe-area
 .jspace,.hero{transition:min-height .42s cubic-bezier(.22,.8,.25,1),padding .42s cubic-bezier(.22,.8,.25,1)}
 .journal.has-open .jspace{min-height:20px}
 .journal.has-open .hero{padding-bottom:16px}
+/* 표지: 화면 높이에 맞춰 카드가 하단바 위 24px에 딱 붙게 (위 24 = 아래 24, KYOTO 위는 18) */
+.journal{box-sizing:border-box;min-height:calc(100dvh - 72px - 24px - env(safe-area-inset-bottom,0px));padding:24px 8px 0}
+.hero{padding-top:18px;padding-bottom:0}
+.jspace{flex:1;min-height:40px;max-height:none}
+.journal.has-open .jspace{min-height:40px}
+.journal.has-open .hero{padding-bottom:0}
