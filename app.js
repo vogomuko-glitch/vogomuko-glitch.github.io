@@ -29,7 +29,10 @@ const STATUS={user:['내가 정한 시간','schedule',''],tt:['공식 시간표'
 let INDEX=null, TRIP=null, cur=null; let GL=[], NM={}; // 일본어 이름 → {ko,en,code}
 let flights=LS.get('trip.flight',{});
 
-async function loadJSON(p){ if(window.__BUNDLE__&&window.__BUNDLE__[p]) return window.__BUNDLE__[p]; const r=await fetch(p+(p.includes('?')?'&':'?')+'v='+(window.__V__||Date.now()),{cache:'no-store'}); return r.json(); }
+async function loadJSON(p){ if(window.__BUNDLE__&&window.__BUNDLE__[p]) return window.__BUNDLE__[p];
+  const k='trip.cache.'+p;
+  try{ const r=await fetch(p+(p.includes('?')?'&':'?')+'v='+(window.__V__||Date.now()),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); const j=await r.json(); LS.set(k,j); return j; }
+  catch(e){ const c=LS.get(k,null); if(c){ window.__OFFLINE__=true; return c; } throw e; } }
 
 /* ---------- 라우팅 ---------- */
 function tripIdFromHash(){ const h=location.hash.replace(/^#/,''); return h||null; }
@@ -40,7 +43,7 @@ async function boot(){
   if(t) await openTrip(t); else renderHome();
   window.addEventListener('hashchange',()=>{const id=tripIdFromHash();const t=INDEX.trips.find(x=>x.id===id);if(t)openTrip(t);else renderHome();});
 }
-function fail(e){ $('#main').innerHTML=`<p style="padding:40px 0;color:var(--ink2)">데이터를 못 불러왔어. 새로고침 해봐.<br><small>${esc(e&&e.message||e)}</small></p>`; }
+function fail(e){ $('#main').innerHTML=`<div class="col" style="padding:40px 0"><p style="color:var(--t1);font-size:16px;font-weight:600;margin:0 0 6px">일정을 못 불러왔어</p><p style="color:var(--t2);margin:0 0 18px;font-size:14px">인터넷이 끊겼거나 서버가 잠깐 안 됨. 한 번 열어본 뒤엔 오프라인에서도 열려.</p><button class="cta" id="retry">다시 시도</button><small style="display:block;margin-top:10px;color:var(--t2)">${esc(e&&e.message||e)}</small></div>`; const b=$('#retry'); if(b) b.onclick=()=>location.reload(); }
 async function openTrip(meta){
   try{ TRIP=await loadJSON(meta.file); }catch(e){ return fail(e); }
   NM=TRIP.names||{}; GL=Object.keys(NM).sort((a,b)=>b.length-a.length); GLRE=null;
@@ -351,5 +354,5 @@ sheet.onclick=e=>{ if(e.target===sheet) sheet.hidden=true; };
 setTimeout(()=>document.documentElement.classList.add('icons'),4000);
 (function(){ const b=document.createElement('button'); b.id='toTop'; b.className='totop'; b.setAttribute('aria-label','맨 위로'); b.innerHTML=ms('arrow_upward'); b.hidden=true; document.body.appendChild(b); b.onclick=()=>window.scrollTo({top:0,behavior:'smooth'}); window.addEventListener('scroll',()=>{ b.hidden=window.scrollY<400; },{passive:true}); })();
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js?v='+(window.__V__||'0')).catch(()=>{});
-boot().catch(e=>{ $('#main').innerHTML=`<p style="padding:40px 0;color:var(--ink2)">데이터를 못 불러왔어. 새로고침 해봐.<br><small>${esc(e.message)}</small></p>`; });
+boot().catch(fail);
 })();
