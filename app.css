@@ -598,3 +598,5 @@ html.scrolled .pbar{padding-top:8px}
 /* 표지 위·아래 여백 동일 (24px) */
 .journal{padding-top:24px;padding-bottom:0}
 body.cards #main.cover-pad,#main{padding-bottom:calc(64px + 24px + env(safe-area-inset-bottom,0px))}
+/* 하단 여백 중복 제거: body가 하단바 높이만큼 이미 비움 → main은 24px만 */
+#main,body.cards #main.cover-pad{padding-bottom:24px}
