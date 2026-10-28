@@ -92,7 +92,7 @@ function stepLabel(s){ // 한국 앱에서 익숙한 말로
   if(s.type==='ride'){ const m=/(バス|버스)/.test(s.a)?'directions_bus':/(지하철|가라스마선|요츠바시線|요츠바시선|四つ橋|肥後橋)/.test(s.a)?'subway':/(하루카|하시다테|新快速|신쾌속|긴테쓰|急行|JR)/.test(s.a)?'train':'directions_bus'; return [RIDE[m],m]; }
   return TYPE[s.type]||TYPE.do;
 }
-function setView(v){ view=v; LS.set('trip.view',v); renderTrip(); window.scrollTo(0,0); }
+function setView(v){ view=v; LS.set('trip.view',v); window.__forceTop=true; renderTrip(); window.scrollTo(0,0); requestAnimationFrame(()=>window.scrollTo(0,0)); setTimeout(()=>{window.scrollTo(0,0);window.__forceTop=false;},80); }
 function renderTrip(){
   if(view==='home') return renderCover();
   if(view==='stay') return renderStay();
@@ -276,7 +276,7 @@ function renderCards(day){
     <a class="cta" target="_blank" rel="noopener" href="${s.v?gdir('현재 위치',s.v.lat+','+s.v.lng):gdir('현재 위치',s.q||s.a)}">${ms('directions','s')} ${esc(s.place||'가려던 곳')}으로 길찾기</a>
     <a class="cta" target="_blank" rel="noopener" href="${gdir('현재 위치',TRIP.home.q,'driving')}">${ms('local_taxi','s')} 택시 타고 숙소</a>
     <div class="kv" style="margin-top:14px">${ms('badge')}<div><b>택시 기사에게</b><p>${esc(TRIP.phrases[0][1])}</p><small>${esc(TRIP.home.address)}</small></div></div>`); });
-  const ai0=stepIdx[TRIP.id+':'+day.id]||0; setNow(0);
+  const ai0=window.__forceTop?0:(stepIdx[TRIP.id+':'+day.id]||0); setNow(0); if(window.__forceTop){ document.documentElement.classList.remove('scrolled'); }
   if(ai0>0&&gs[ai0]){ requestAnimationFrame(()=>{ window.scrollTo(0,gs[ai0].getBoundingClientRect().top+window.scrollY-hdr()+6); setTimeout(pick,50); }); }
 }
 
