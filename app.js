@@ -301,7 +301,9 @@ function renderCover(){
     const r0=cards[i].getBoundingClientRect(); const jri=cards[i].querySelector('.jri'); const contentH=jri.scrollHeight;
     setDay(i,willOpen);
     if(willOpen){ const shrink=wasOpen?0:68; const top=r0.top-shrink; const bottom=top+r0.height+contentH; const vh=window.innerHeight-90;
-      if(bottom>vh||top<0){ const target=Math.max(0,window.scrollY+top-12); window.scrollTo({top:target,behavior:'smooth'}); } } });
+      if(bottom>vh||top<0){ const target=Math.max(0,window.scrollY+top-12); window.scrollTo({top:target,behavior:'smooth'}); }
+      const fix=()=>{ const r=cards[i].getBoundingClientRect(); if(r.bottom>window.innerHeight-90||r.top<0){ window.scrollTo({top:Math.max(0,window.scrollY+r.top-12),behavior:'smooth'}); } };
+      cards[i].querySelector('.jr').addEventListener('transitionend',fix,{once:true}); setTimeout(fix,480); } });
   cards.forEach((cd,i)=>{ cd.addEventListener('click',e=>{ if(e.target.closest('.jgo')) return; if(cd.classList.contains('open')&&!e.target.closest('.jt')) setDay(-1,false); }); });
   document.querySelectorAll('.jgo').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);stepIdx[TRIP.id+':'+cur]=0;LS.set('trip.step',stepIdx);setView('days');});
   renderBar();
