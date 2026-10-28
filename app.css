@@ -600,3 +600,7 @@ html.scrolled .pbar{padding-top:8px}
 body.cards #main.cover-pad,#main{padding-bottom:calc(64px + 24px + env(safe-area-inset-bottom,0px))}
 /* 하단 여백 중복 제거: body가 하단바 높이만큼 이미 비움 → main은 24px만 */
 #main,body.cards #main.cover-pad{padding-bottom:24px}
+/* 펼칠 때 위쪽 여백은 안 움직이게(한 번에) */
+.jspace,.hero{transition:none}
+.journal.has-open .jspace{min-height:60px}
+.journal.has-open .hero{padding-bottom:44px}
