@@ -604,3 +604,7 @@ body.cards #main.cover-pad,#main{padding-bottom:calc(64px + 24px + env(safe-area
 .jspace,.hero{transition:none}
 .journal.has-open .jspace{min-height:60px}
 .journal.has-open .hero{padding-bottom:44px}
+/* 여백 축소 · 카드 펼침 · 스크롤 동시에, 같은 속도 */
+.jspace,.hero{transition:min-height .42s cubic-bezier(.22,.8,.25,1),padding .42s cubic-bezier(.22,.8,.25,1)}
+.journal.has-open .jspace{min-height:20px}
+.journal.has-open .hero{padding-bottom:16px}
