@@ -103,7 +103,7 @@ function renderTrip(){
   $('#top').querySelectorAll('.day').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);renderTrip();window.scrollTo(0,0);});
   $('#bHome').onclick=()=>setView('home'); $('#bInfo').onclick=()=>openSheet(`<h3>${esc(TRIP.title)}</h3><p class="lead">${esc(TRIP.dates)} · ${esc(TRIP.tzNote||TRIP.timezone)}</p>${(TRIP.info||[]).map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p>${k.sub?`<small>${esc(k.sub)}</small>`:''}</div></div>`).join('')}`);
   const day=TRIP.days.find(d=>d.id===cur);
-  document.body.classList.remove('cards'); window.onscroll=null; const pb0=$('#pbar'); if(pb0) pb0.hidden=true;
+  document.body.classList.remove('cards','oncover'); window.onscroll=null; const pb0=$('#pbar'); if(pb0) pb0.hidden=true;
   if(!day.steps||!day.steps.length){ document.body.classList.add('cards'); $('#main').innerHTML=`<div class="col"><p class="end" style="padding:60px 0;color:var(--t2)">아직 비어 있음</p></div>`; const pb=$('#pbar'); if(pb) pb.hidden=true; renderBar(); return; }
   if(mode==='cards'&&day.steps&&day.steps.length){ renderCards(day); return; }
   const nv=day.items.filter(i=>i.st==='v'||i.st==='est').length, np=day.items.filter(i=>i.k==='p').length;
@@ -281,10 +281,10 @@ function renderCards(day){
 }
 
 /* ---------- 표지 / 숙소·요약 / 준비 ---------- */
-function clearShell(){ document.body.classList.remove('cards'); window.onscroll=null; document.documentElement.classList.remove('scrolled'); }
+function clearShell(){ document.body.classList.remove('cards','oncover'); window.onscroll=null; document.documentElement.classList.remove('scrolled'); }
 function renderCover(){
   clearShell();
-  $('#top').innerHTML='';
+  $('#top').innerHTML=''; document.body.classList.add('oncover');
   const c=TRIP.cover||{}; const W={'토':'SAT','일':'SUN','월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI'};
   const pill=(d,i)=>{ const date=d.d.replace('/','.').replace(/^(\d)\./,'$1.').replace(/^(\d{2})\.(\d)$/,'$1.0$2'); const wk=W[(d.w||'').slice(0,1)]||'';
     return `<article class="jday" style="--color:${esc(d.color)};--text:${esc(d.text||'#171717')}"><button class="jt" data-i="${i}" aria-expanded="false"><span class="jd">${date} <span class="jw">${wk}</span></span><span></span><span class="jsign">+</span></button>

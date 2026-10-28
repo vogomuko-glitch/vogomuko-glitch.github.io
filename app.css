@@ -617,3 +617,6 @@ body.cards #main.cover-pad,#main{padding-bottom:calc(64px + 24px + env(safe-area
 :root{--barh:calc(56px + env(safe-area-inset-bottom,0px))}
 body{padding-bottom:var(--barh)}
 .journal{min-height:calc(100dvh - var(--barh) - 24px)}
+/* 표지: 헤더 줄 숨김, 상태바 아래 24px에서 시작 */
+body.oncover .top{border-bottom:0;padding-top:0;height:0;overflow:hidden}
+body.oncover .journal{padding-top:calc(env(safe-area-inset-top,0px) + 24px);min-height:calc(100dvh - var(--barh))}
