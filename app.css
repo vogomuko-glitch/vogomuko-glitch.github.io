@@ -614,3 +614,6 @@ body.cards #main.cover-pad,#main{padding-bottom:calc(64px + 24px + env(safe-area
 .jspace{flex:1;min-height:40px;max-height:none}
 .journal.has-open .jspace{min-height:40px}
 .journal.has-open .hero{padding-bottom:0}
+:root{--barh:calc(56px + env(safe-area-inset-bottom,0px))}
+body{padding-bottom:var(--barh)}
+.journal{min-height:calc(100dvh - var(--barh) - 24px)}

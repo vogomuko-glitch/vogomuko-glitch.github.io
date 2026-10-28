@@ -352,6 +352,7 @@ function renderBar(){
   const tab=(v,ic,lb)=>`<button data-v="${v}" class="${view===v?'on':''}">${ms(ic)}<span>${lb}</span></button>`;
   b.innerHTML=`<div class="wrap">${tab('home','home','홈')}${tab('days','route','일정')}${tab('stay','hotel','숙소·요약')}${tab('prep','checklist','준비')}</div>`;
   b.querySelectorAll('button').forEach(x=>x.onclick=()=>setView(x.dataset.v));
+  requestAnimationFrame(()=>document.documentElement.style.setProperty('--barh',b.offsetHeight+'px'));
 }
 const sheet=$('#sheet'), pn=$('#pn');
 function openSheet(html){ pn.innerHTML=`<div class="grab"></div>${html}<button class="close" id="cl">닫기</button>`; sheet.hidden=false; $('#cl').onclick=()=>sheet.hidden=true; }
