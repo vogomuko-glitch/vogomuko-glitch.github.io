@@ -620,3 +620,13 @@ body{padding-bottom:var(--barh)}
 /* 표지: 헤더 줄 숨김, 상태바 아래 24px에서 시작 */
 body.oncover .top{border-bottom:0;padding-top:0;height:0;overflow:hidden}
 body.oncover .journal{padding-top:calc(env(safe-area-inset-top,0px) + 24px);min-height:calc(100dvh - var(--barh))}
+/* 표지 여백: 아래 20 = 위(상태바↔줄), KYOTO 위는 눈에 보이는 14px */
+.journal{min-height:calc(100dvh - var(--barh) - 20px)}
+.bar a,.bar button{padding-top:4px}
+.hero{padding-top:14px}
+.hero .ct{margin-top:-.19em;line-height:1}
+#main{padding-bottom:20px}
+.journal{min-height:calc(100dvh - var(--barh) - 20px)}
+.hero{padding-top:6px}
+.journal{min-height:0}
+#main{padding-bottom:20px}

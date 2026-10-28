@@ -295,6 +295,8 @@ function renderCover(){
     <div class="hero"><h1 class="ct">${esc(c.title||TRIP.title)}</h1></div><div class="jspace"></div>
     <div class="jdays">${TRIP.days.map(pill).join('')}${ex}</div>
     </section>`;
+  const fitCover=()=>{ const j=$('.journal'); if(!j) return; const top=$('#top').offsetHeight, bar=$('#bar').offsetHeight; const mainPad=parseFloat(getComputedStyle($('#main')).paddingBottom)||0; j.style.minHeight=Math.max(0,window.innerHeight-top-bar-mainPad)+'px'; };
+  requestAnimationFrame(fitCover); setTimeout(fitCover,300); window.addEventListener('resize',fitCover,{once:true});
   const cards=[...document.querySelectorAll('.jday')];
   const setDay=(idx,open)=>{ cards.forEach((cd,i)=>{ const on=i===idx&&open; cd.classList.toggle('open',on); const sg=cd.querySelector('.jsign'); if(sg) sg.textContent=on?'−':'+'; const bt=cd.querySelector('.jt'); if(bt) bt.setAttribute('aria-expanded',String(on)); }); $('.journal').classList.toggle('has-open',open); };
   document.querySelectorAll('.jt:not(.static)').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; const willOpen=!cards[i].classList.contains('open'); const wasOpen=$('.journal').classList.contains('has-open');
