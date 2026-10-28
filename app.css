@@ -595,3 +595,6 @@ html.scrolled .pbar{padding-top:8px}
 #main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .journal{min-height:auto;padding-bottom:8px}
 .jfooter{display:none}
+/* 표지 위·아래 여백 동일 (24px) */
+.journal{padding-top:24px;padding-bottom:0}
+body.cards #main.cover-pad,#main{padding-bottom:calc(64px + 24px + env(safe-area-inset-bottom,0px))}
