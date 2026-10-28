@@ -294,7 +294,7 @@ function renderCover(){
   $('#main').innerHTML=`<section class="journal"><header class="mast"><span>${esc((c.masthead||[])[0]||'')}</span><span>${esc((c.masthead||[])[1]||'')}</span></header>
     <div class="hero"><h1 class="ct">${esc(c.title||TRIP.title)}</h1></div><div class="jspace"></div>
     <div class="jdays">${TRIP.days.map(pill).join('')}${ex}</div>
-    <footer class="jfooter"><span>${esc(c.footer||'')}</span></footer></section>`;
+    </section>`;
   const cards=[...document.querySelectorAll('.jday')];
   const setDay=(idx,open)=>{ cards.forEach((cd,i)=>{ const on=i===idx&&open; cd.classList.toggle('open',on); const sg=cd.querySelector('.jsign'); if(sg) sg.textContent=on?'−':'+'; const bt=cd.querySelector('.jt'); if(bt) bt.setAttribute('aria-expanded',String(on)); }); $('.journal').classList.toggle('has-open',open); };
   document.querySelectorAll('.jt:not(.static)').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; setDay(i,!cards[i].classList.contains('open')); });

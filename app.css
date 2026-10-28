@@ -590,3 +590,8 @@ html.scrolled .pbar{padding-top:8px}
 .totop{position:fixed;right:16px;bottom:calc(72px + env(safe-area-inset-bottom,0px));width:42px;height:42px;border-radius:50%;border:1px solid var(--ln);background:var(--bg);color:var(--t1);display:flex;align-items:center;justify-content:center;z-index:25;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .totop[hidden]{display:none}
 .totop .ms{font-size:22px}
+/* 1·4·5: 표지 여백, 모든 화면 하단 여백(하단바+홈바), 푸터 제거 */
+.hero{padding-top:18px}
+#main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.journal{min-height:auto;padding-bottom:8px}
+.jfooter{display:none}
