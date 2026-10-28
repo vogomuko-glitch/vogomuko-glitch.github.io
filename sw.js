@@ -1,4 +1,4 @@
-const V='20261028161218', C='trip-store';
+const V='20261028161409', C='trip-store';
 const CORE=['./','index.html','app.js?v='+V,'app.css?v='+V,'manifest.json','icon.png','trips/index.json','trips/kyoto-2026.json'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(C).then(c=>Promise.all(CORE.map(u=>fetch(u,{cache:'no-store'}).then(r=>{ if(r.ok) return c.put(new Request(u.split('?')[0]),r); }).catch(()=>{})))).then(()=>self.skipWaiting())); });
 self.addEventListener('activate',e=>{ e.waitUntil(self.clients.claim()); });

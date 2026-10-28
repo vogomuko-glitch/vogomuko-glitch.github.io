@@ -299,7 +299,7 @@ function renderCover(){
   const setDay=(idx,open)=>{ cards.forEach((cd,i)=>{ const on=i===idx&&open; cd.classList.toggle('open',on); const sg=cd.querySelector('.jsign'); if(sg) sg.textContent=on?'−':'+'; const bt=cd.querySelector('.jt'); if(bt) bt.setAttribute('aria-expanded',String(on)); }); $('.journal').classList.toggle('has-open',open); };
   document.querySelectorAll('.jt:not(.static)').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; setDay(i,!cards[i].classList.contains('open')); });
   cards.forEach((cd,i)=>{ cd.addEventListener('click',e=>{ if(e.target.closest('.jgo')) return; if(cd.classList.contains('open')&&!e.target.closest('.jt')) setDay(-1,false); }); });
-  document.querySelectorAll('.jgo').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);setView('days');});
+  document.querySelectorAll('.jgo').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);stepIdx[TRIP.id+':'+cur]=0;LS.set('trip.step',stepIdx);setView('days');});
   renderBar();
 }
 function renderStay(){
@@ -327,7 +327,7 @@ function renderStay(){
       </div></button>`).join('')}
     </section></div>`;
   $('#cpAddr').onclick=()=>{ navigator.clipboard&&navigator.clipboard.writeText(H.address).then(()=>{$('#cpAddr').innerHTML=ms('check','s')+'복사됨';}); };
-  document.querySelectorAll('.sd').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);setView('days');});
+  document.querySelectorAll('.sd').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);stepIdx[TRIP.id+':'+cur]=0;LS.set('trip.step',stepIdx);setView('days');});
   renderBar();
 }
 function renderPrep(){
