@@ -632,3 +632,7 @@ body.oncover .journal{padding-top:calc(env(safe-area-inset-top,0px) + 24px);min-
 #main{padding-bottom:20px}
 .hero{padding-top:14px}
 .hero .ct{margin-top:0;line-height:1}
+/* 가로로 밀리는 현상 차단 */
+html,body{overflow-x:hidden;max-width:100%}
+.col,.rbd,.grp{max-width:100%;box-sizing:border-box}
+.dl{box-sizing:border-box;margin-right:0}
