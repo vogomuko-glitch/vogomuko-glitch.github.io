@@ -636,3 +636,5 @@ body.oncover .journal{padding-top:calc(env(safe-area-inset-top,0px) + 24px);min-
 html,body{overflow-x:hidden;max-width:100%}
 .col,.rbd,.grp{max-width:100%;box-sizing:border-box}
 .dl{box-sizing:border-box;margin-right:0}
+
+.qr{margin:10px 0 4px;text-align:center}.qr img{width:min(260px,72%);height:auto;display:block;margin:0 auto;background:#fff}.qr span{display:block;margin-top:6px;font-size:12px;color:var(--mute,#888)}

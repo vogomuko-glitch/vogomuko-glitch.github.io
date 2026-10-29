@@ -2482,7 +2482,8 @@
        "https://mail.google.com/",
        "mail"
       ]
-     ]
+     ],
+     "qr": "qr-kyocera.png"
     },
     {
      "type": "walk",
