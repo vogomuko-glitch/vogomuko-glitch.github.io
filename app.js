@@ -212,6 +212,7 @@ function rowHTML(s,k,n){
   if(s.type==='ride'||s.type==='walk'||s.type==='taxi'){ links.push(`<a class="live" target="_blank" rel="noopener" href="${gdir(s.q1||(s.onName||''),s.q2||(s.offName||s.q||''),s.type==='taxi'?'driving':s.type==='walk'?'walking':'transit')}">${ms('directions','s')}${s.type==='ride'?'실시간 도착':'구글맵 길찾기'}</a>`); }
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
+  (s.links||[]).forEach(l=>links.push(`<a target="_blank" rel="noopener" href="${esc(l[1])}">${ms(l[2]||'link','s')}${esc(l[0])}</a>`));
   const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}${s.offSub?`<em>${esc(s.offSub)}</em>`:''}<span class="lbl">하차</span></div>`:'';
   return `<div class="row m-${s.mode||'stay'} ${off?'has-off':''}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
     ${head}${intro}

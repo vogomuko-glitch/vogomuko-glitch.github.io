@@ -2473,7 +2473,14 @@
       "lng": 135.7828,
       "h": 90,
       "cap": "교세라미술관 정면"
-     }
+     },
+     "links": [
+      [
+       "예약 확인·변경",
+       "https://art-ap.passes.jp/user/e/zen-ghibli/order",
+       "edit_calendar"
+      ]
+     ]
     },
     {
      "type": "walk",
