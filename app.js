@@ -260,7 +260,7 @@ function renderCards(day){
   const setNow=ai=>{
     pb.querySelectorAll('.pb').forEach((b,i)=>{ b.classList.toggle('now',i===ai); b.classList.toggle('past',i<ai); });
     pb.querySelectorAll('.pseg').forEach((sg,i)=>sg.classList.toggle('past',i<ai));
-    const nb=pb.querySelector('.pb.now'); if(nb) nb.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+    const nb=pb.querySelector('.pb.now'); if(nb){ const L=nb.offsetLeft-(pb.clientWidth-nb.offsetWidth)/2; pb.scrollTo({left:Math.max(0,L),behavior:'smooth'}); }
     stepIdx[TRIP.id+':'+day.id]=ai; LS.set('trip.step',stepIdx);
   };
   const gs=[...document.querySelectorAll('.grp')];
