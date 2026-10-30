@@ -219,7 +219,7 @@ function rowHTML(s,k,n){
     ${body}${bul}
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
     ${img}
-    ${s.qr?`<div class="qr"><img src="${esc(s.qr)}" alt="입장 QR"><span>입장 QR · 화면 밝기 최대</span></div>`:''}
+    ${s.qr?`<div class="qr"><img src="${esc(s.qr)}" alt="입장 QR"><span>${esc(s.qrcap||"입장 QR · 화면 밝기 최대")}</span></div>`:''}
     ${links.length?`<div class="plinks">${links.join('')}</div>`:''}
     ${off}
   </div></div>`;
