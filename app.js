@@ -186,7 +186,7 @@ function mdfmt(x){ // **X** 방면 → 방면 표기, 나머지 ** ** 는 굵게
   while((m=re.exec(x))){ out.push(koify(x.slice(last,m.index))); out.push(m[2]&&!m[1].includes('{{')?dirHTML(m[1]):`<b>${koify(m[1])}</b>`); last=re.lastIndex; }
   out.push(koify(x.slice(last))); return out.join('');
 }
-function rowHTML(s,k,n){
+function rowHTML(s,k,n,day){ day=day||{};
   let [tn,ti]=stepLabel(s); if(MODEICON[s.mode]) ti=MODEICON[s.mode]; const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
   const P=(TRIP.places||{})[s.pid];
   const tm=(s.t&&!s.place)?`<span class="tm num">${esc(s.t)}</span>`:'';
@@ -213,9 +213,10 @@ function rowHTML(s,k,n){
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
   (s.links||[]).forEach(l=>links.push(`<a target="_blank" rel="noopener" href="${esc(l[1])}">${ms(l[2]||'link','s')}${esc(l[0])}</a>`));
+  const ttHTML=s.tt?`<div class="tt" data-tt='${JSON.stringify(s.tt).replace(/'/g,"&#39;")}' data-date="${esc(day.id?'2026-'+day.id.slice(1,3)+'-'+day.id.slice(3,5):'')}" data-line="${esc(s.line||'')}"></div>`:'';
   const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}${s.offSub?`<em>${esc(s.offSub)}</em>`:''}<span class="lbl">하차</span></div>`:'';
   return `<div class="row m-${s.mode||'stay'} ${off?'has-off':''}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
-    ${head}${intro}
+    ${head}${ttHTML}${intro}
     ${body}${bul}
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
     ${img}
@@ -245,7 +246,7 @@ function renderCards(day){
   steps.forEach((st,k)=>{ if(/^(walk|taxi)$/.test(st.type)&&!st.q2){ const nx=steps.slice(k+1).find(x=>x.q||x.v||x.onName); st.q1=st.q1||'현재 위치'; st.q2=st.q||(nx?(nx.v?nx.v.lat+','+nx.v.lng:(nx.q||nx.onName)):TRIP.home.q); } if(st.type==='ride'&&!st.q2){ st.q1=st.q1||st.onName||'현재 위치'; st.q2=st.offName||TRIP.home.q; } });
   const lastPlaceAi=(()=>{ let r=-1; anchors.forEach((k,ai)=>{ if(steps[k].place!=='숙소') r=ai; }); return r; })();
   const body=groups.map(g=>{ const p=steps[g.k];
-    const rows=[]; for(let k=g.from;k<g.to;k++) rows.push(rowHTML(steps[k],k,n));
+    const rows=[]; for(let k=g.from;k<g.to;k++) rows.push(rowHTML(steps[k],k,n,day));
     const q=p.v?gmap(p.v.lat+','+p.v.lng):gmap(p.q||p.a);
     const dlb=(g.ai===lastPlaceAi&&day.ret&&day.target)?`<div class="dl">${ms('schedule','s')}<div><b>${esc(day.target)} 귀가 → 여기서 ${f2(hm(day.target)-day.ret)} 출발</b>${day.max?`<span>최대 ${esc(day.max)} 귀가 → ${f2(hm(day.max)-day.ret)} 출발</span>`:''}</div></div>`:'';
     return `<section class="grp ${p.opt?'opt':''}" id="g${g.ai}" data-ai="${g.ai}">
@@ -367,4 +368,28 @@ setTimeout(()=>document.documentElement.classList.add('icons'),4000);
 (function(){ const b=document.createElement('button'); b.id='toTop'; b.className='totop'; b.setAttribute('aria-label','맨 위로'); b.innerHTML=ms('arrow_upward'); b.hidden=true; document.body.appendChild(b); b.onclick=()=>window.scrollTo({top:0,behavior:'smooth'}); window.addEventListener('scroll',()=>{ b.hidden=window.scrollY<400; },{passive:true}); })();
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js?v='+(window.__V__||'0')).catch(()=>{});
 boot().catch(fail);
+})();
+
+// 시각표 기준 "다음 버스 N분 후" (교토시 교통국 공식 시각표 · GPS 실시간 아님)
+(function(){
+  const HOL=['2026-11-03','2026-11-23'];
+  const kind=d=>{ if(!d) return 'wd'; if(HOL.includes(d)) return 'ho'; const w=new Date(d+'T00:00:00').getDay(); return w===0?'ho':w===6?'sa':'wd'; };
+  const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x);return m?+m[1]*60+ +m[2]:null;};
+  const pad=n=>String(n).padStart(2,'0');
+  function tick(){
+    const now=new Date(); const today=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate()); const cur=now.getHours()*60+now.getMinutes();
+    document.querySelectorAll('.tt').forEach(el=>{
+      let tt; try{ tt=JSON.parse(el.dataset.tt); }catch(e){ return; }
+      const d=el.dataset.date; const list=tt[kind(d)]||tt.wd||[]; const line=el.dataset.line||'버스';
+      const lbl={wd:'평일',sa:'토요일',ho:'일·공휴일'}[kind(d)];
+      if(d!==today){ el.innerHTML=`<span class="dim">${lbl} 시각표 · ${line}</span> ${list.map(x=>`<b>${x}</b>`).join(' · ')}`; return; }
+      const next=list.map(x=>[x,hm(x)]).filter(p=>p[1]!=null&&p[1]>=cur);
+      if(!next.length){ el.innerHTML=`<span class="dim">${lbl} ${line} · 오늘 시각표 끝</span>`; return; }
+      const [t0,m0]=next[0]; const diff=m0-cur;
+      const more=next.slice(1,3).map(p=>p[0]).join(' · ');
+      el.innerHTML=`<span class="now">${line} <b>${diff<=0?'지금':diff>=120?Math.floor(diff/60)+'시간 '+(diff%60)+'분 후':diff+'분 후'}</b> ${t0}</span>${more?`<span class="dim"> · 다음 ${more}</span>`:''}<span class="dim src"> 시각표 기준</span>`;
+    });
+  }
+  tick(); setInterval(tick,30000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });
+  const mo=new MutationObserver(()=>tick()); mo.observe(document.getElementById('main')||document.body,{childList:true,subtree:false});
 })();
