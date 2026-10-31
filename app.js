@@ -384,10 +384,10 @@ boot().catch(fail);
       const lbl={wd:'평일',sa:'토요일',ho:'일·공휴일'}[kind(d)];
       if(d!==today){ el.innerHTML=`<span class="dim">${lbl} 시각표</span>  ${list.map(x=>`<b>${x}</b>`).join(' · ')}`; return; }
       const next=list.map(x=>[x,hm(x)]).filter(p=>p[1]!=null&&p[1]>=cur);
-      if(!next.length){ el.innerHTML=`<span class="dim">${lbl} · 오늘 시각표 끝</span>`; return; }
+      if(!next.length){ el.innerHTML=`<span class="dim">${lbl} · 이 시간대 시각표 없음 → 전광판 확인</span>`; return; }
       const [t0,m0]=next[0]; const diff=m0-cur;
       const more=next.slice(1,3).map(p=>p[0]).join(' · ');
-      el.innerHTML=`<span class="now"><b>${diff<=0?'지금':diff>=120?Math.floor(diff/60)+'시간 '+(diff%60)+'분 후':diff+'분 후'}</b> ${t0}</span>${more?`<span class="dim"> · 다음 ${more}</span>`:''}<span class="dim src"> 시각표 기준</span>`;
+      el.innerHTML=`<span class="now"><b>${diff<=0?'지금':diff>=120?Math.floor(diff/60)+'시간 '+(diff%60)+'분 후':diff+'분 후'}</b> ${t0}</span>${more?`<span class="dim"> · 다음 ${more}</span>`:''}<span class="dim src" style="display:inline"> ${tt.src||'시각표 기준'}</span>`;
     });
   }
   tick(); setInterval(tick,30000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });

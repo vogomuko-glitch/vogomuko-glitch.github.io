@@ -641,4 +641,4 @@ html,body{overflow-x:hidden;max-width:100%}
 
 .tt{font-size:14px;line-height:1.5;color:var(--mute,#777);margin-top:2px}.tt .now{color:#1E6BFF;font-weight:600}.tt .now b{font-size:16px}.tt .dim{color:var(--mute,#888);font-weight:400}.tt .src{font-size:11px;margin-left:4px}
 
-.tt{margin:2px 0 4px;font-size:15px;line-height:1.4}.tt .src{display:none}.tt .dim{font-size:13px}
+.tt{margin:2px 0 4px;font-size:15px;line-height:1.4}.tt .src{font-size:11px;margin-left:6px}.tt .dim{font-size:13px}
