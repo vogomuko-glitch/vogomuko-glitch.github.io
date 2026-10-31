@@ -1426,14 +1426,21 @@
      "offSub": "(종점)",
      "plat": "정류장 표지 **19 大原**",
      "after": "종점 하차 · 내릴 때 Suica",
-     "see": "뒷문 탈 때 Suica 찍고 → 앞문 내릴 때 또 찍기 (구간요금)",
+     "see": "뒷문 탈 때 Suica 찍고 → 앞문 내릴 때 또 찍기 (구간요금) · 공식 시각표 못 열었음 → 기둥 시각표 休日 열 확인",
      "pay": "Suica 360엔",
      "v": {
       "lat": 35.062,
       "lng": 135.7873,
       "h": 0,
       "cap": "고쿠사이카이칸 버스터미널 19번 자리"
-     }
+     },
+     "links": [
+      [
+       "교토버스 공식 실시간(버스나비)",
+       "https://kyotobus.bus-navigation.jp/wgsys/wgs/search.htm",
+       "schedule"
+      ]
+     ]
     },
     {
      "type": "walk",
@@ -1569,9 +1576,16 @@
      "after": "종점 하차 · 내릴 때 Suica → 지하철 입구",
      "pay": "Suica 360엔",
      "fare": "360엔",
-     "see": "뒷문 탈 때 Suica 찍고 → 앞문 내릴 때 또 찍기 (구간요금) · 아침에 온 길 역순",
+     "see": "뒷문 탈 때 Suica 찍고 → 앞문 내릴 때 또 찍기 (구간요금) · 아침에 온 길 역순 · 공식 시각표 못 열었음 → 기둥 시각표 休日 열 확인",
      "q1": "大原",
-     "q2": "国際会館駅前"
+     "q2": "国際会館駅前",
+     "links": [
+      [
+       "교토버스 공식 실시간(버스나비)",
+       "https://kyotobus.bus-navigation.jp/wgsys/wgs/search.htm",
+       "schedule"
+      ]
+     ]
     },
     {
      "type": "ride",
