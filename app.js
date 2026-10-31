@@ -83,7 +83,7 @@ function newTripSheet(){
 /* ---------- 여행 화면 ---------- */
 function now(){ const n=new Date(); return {key:(n.getMonth()+1)+'/'+n.getDate(),hm:n.getHours()*60+n.getMinutes()}; }
 function todayIndex(){ const k=now().key; const i=TRIP.days.findIndex(d=>d.d===k); return i<0?0:i; }
-let mode='cards'; let view=LS.get('trip.view','home'); // home|days|stay|prep
+let mode='cards'; let view='home'; // 실행 시 항상 홈 // home|days|stay|prep
 const TYPE={walk:['도보','directions_walk'],ride:['탑승','directions_bus'],taxi:['택시','local_taxi'],buy:['창구','confirmation_number'],see:['관람','visibility'],do:['할 일','task_alt'],arrive:['도착','flag']};
 const RIDE={directions_bus:'버스',subway:'지하철',train:'열차',tram:'전철',directions_boat:'배'};
 const MODEICON={walk:'directions_walk',taxi:'local_taxi',citybus:'directions_bus',loop:'directions_bus',flat:'directions_bus',kyotobus:'directions_bus',tankai:'directions_bus',bus:'directions_bus','subway-k':'subway','subway-y':'subway','subway-t':'subway','subway-m':'subway',jr:'train',ltd:'train',kintetsu:'train',nankai:'train'};
@@ -100,7 +100,7 @@ function renderTrip(){
   const tk=now().key;
   $('#top').innerHTML=`<div class="top-row"><button class="ib" id="bHome" aria-label="표지">${ms('arrow_back')}</button><h1>${esc(TRIP.title)}</h1><button class="ib r" id="bInfo" aria-label="정보">${ms('info')}</button></div>
     <div class="days" role="tablist">${TRIP.days.map(d=>`<button role="tab" class="day ${d.id===cur?'on':''} ${d.d===tk?'today':''}" data-id="${d.id}" aria-selected="${d.id===cur}" style="--dc:${esc(d.color||'#000')}"><small>${esc(d.w)}</small><b class="num">${esc(d.d)}</b><i class="dcb"></i></button>`).join('')}</div><div class="pbar" id="pbar" hidden></div>`;
-  $('#top').querySelectorAll('.day').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);renderTrip();window.scrollTo(0,0);});
+  $('#top').querySelectorAll('.day').forEach(b=>b.onclick=()=>{cur=b.dataset.id;LS.set('trip.day.'+TRIP.id,cur);window.__forceTop=true;renderTrip();window.scrollTo(0,0);requestAnimationFrame(()=>window.scrollTo(0,0));setTimeout(()=>{window.scrollTo(0,0);window.__forceTop=false;},80);});
   $('#bHome').onclick=()=>setView('home'); $('#bInfo').onclick=()=>openSheet(`<h3>${esc(TRIP.title)}</h3><p class="lead">${esc(TRIP.dates)} · ${esc(TRIP.tzNote||TRIP.timezone)}</p>${(TRIP.info||[]).map(k=>`<div class="kv">${ms(k.icon)}<div><b>${esc(k.title)}</b><p>${esc(k.body)}</p>${k.sub?`<small>${esc(k.sub)}</small>`:''}</div></div>`).join('')}`);
   const day=TRIP.days.find(d=>d.id===cur);
   document.body.classList.remove('cards','oncover'); window.onscroll=null; const pb0=$('#pbar'); if(pb0) pb0.hidden=true;
@@ -279,7 +279,7 @@ function renderCards(day){
     <a class="cta" target="_blank" rel="noopener" href="${s.v?gdir('현재 위치',s.v.lat+','+s.v.lng):gdir('현재 위치',s.q||s.a)}">${ms('directions','s')} ${esc(s.place||'가려던 곳')}으로 길찾기</a>
     <a class="cta" target="_blank" rel="noopener" href="${gdir('현재 위치',TRIP.home.q,'driving')}">${ms('local_taxi','s')} 택시 타고 숙소</a>
     <div class="kv" style="margin-top:14px">${ms('badge')}<div><b>택시 기사에게</b><p>${esc(TRIP.phrases[0][1])}</p><small>${esc(TRIP.home.address)}</small></div></div>`); });
-  const ai0=window.__forceTop?0:(stepIdx[TRIP.id+':'+day.id]||0); setNow(0); if(window.__forceTop){ document.documentElement.classList.remove('scrolled'); }
+  const ai0=0; // 항상 맨 위에서 시작 setNow(0); if(window.__forceTop){ document.documentElement.classList.remove('scrolled'); }
   if(ai0>0&&gs[ai0]){ requestAnimationFrame(()=>{ window.scrollTo(0,gs[ai0].getBoundingClientRect().top+window.scrollY-hdr()+6); setTimeout(pick,50); }); }
 }
 
