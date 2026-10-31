@@ -191,10 +191,11 @@ function rowHTML(s,k,n,day){ day=day||{};
   const P=(TRIP.places||{})[s.pid];
   const tm=(s.t&&!s.place)?`<span class="tm num">${esc(s.t)}</span>`:'';
   let head='', body='';
+  const ttHTML=s.tt?`<div class="tt" data-tt='${JSON.stringify(s.tt).replace(/'/g,"&#39;")}' data-date="${esc(day.id?'2026-'+day.id.slice(1,3)+'-'+day.id.slice(3,5):'')}" data-line="${esc(s.line||'')}"></div>`:'';
   if(s.type==='ride'){
     const meta=[s.kind||tn,s.stops?esc(s.stops):'',s.dur?esc(s.dur):'',s.pay?esc(s.pay):(s.fare?esc(s.fare):'')].filter(Boolean).join(' · ');
     head=`${s.onName?`<div class="node on">${KO(s.onName)}${s.onSub?`<em>${esc(s.onSub)}</em>`:''}</div>`:''}
-      <div class="bl"><span class="badge">${esc(s.line||tn)}</span><span class="sub">${meta}</span>${tm}</div>`;
+      <div class="bl"><span class="badge">${esc(s.line||tn)}</span>${s.tt?ttHTML:`<span class="sub">${meta}</span>`}${tm}</div>`;
     const kv=(lb,v)=>v?`<div class="kv2"><span class="lb">${lb}</span><span class="vl">${mdfmt(v)}</span></div>`:'';
     body=`<div class="kvs">${kv('승강장',s.plat)}${kv('내려서',s.after)}${kv('참고',s.see)}</div>`;
   } else if(s.type==='walk'){
@@ -213,10 +214,9 @@ function rowHTML(s,k,n,day){ day=day||{};
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
   (s.links||[]).forEach(l=>links.push(`<a target="_blank" rel="noopener" href="${esc(l[1])}">${ms(l[2]||'link','s')}${esc(l[0])}</a>`));
-  const ttHTML=s.tt?`<div class="tt" data-tt='${JSON.stringify(s.tt).replace(/'/g,"&#39;")}' data-date="${esc(day.id?'2026-'+day.id.slice(1,3)+'-'+day.id.slice(3,5):'')}" data-line="${esc(s.line||'')}"></div>`:'';
   const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}${s.offSub?`<em>${esc(s.offSub)}</em>`:''}<span class="lbl">하차</span></div>`:'';
   return `<div class="row m-${s.mode||'stay'} ${off?'has-off':''}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
-    ${head}${ttHTML}${intro}
+    ${head}${intro}
     ${body}${bul}
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
     ${img}
