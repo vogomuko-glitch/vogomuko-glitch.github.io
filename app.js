@@ -195,7 +195,7 @@ function rowHTML(s,k,n,day){ day=day||{};
   if(s.type==='ride'){
     const meta=[s.kind||tn,s.stops?esc(s.stops):'',s.dur?esc(s.dur):'',s.pay?esc(s.pay):(s.fare?esc(s.fare):'')].filter(Boolean).join(' · ');
     head=`${s.onName?`<div class="node on">${KO(s.onName)}${s.onSub?`<em>${esc(s.onSub)}</em>`:''}</div>`:''}
-      <div class="bl"><span class="badge">${esc(s.line||tn)}</span>${s.tt?ttHTML:`<span class="sub">${meta}</span>`}${tm}</div>`;
+      <div class="bl"><span class="badge">${esc(s.line||tn)}</span>${s.tt?'':`<span class="sub">${meta}</span>`}${tm}</div>${s.tt?ttHTML:''}`;
     const kv=(lb,v)=>v?`<div class="kv2"><span class="lb">${lb}</span><span class="vl">${mdfmt(v)}</span></div>`:'';
     body=`<div class="kvs">${kv('승강장',s.plat)}${kv('내려서',s.after)}${kv('참고',s.see)}</div>`;
   } else if(s.type==='walk'){
@@ -382,12 +382,12 @@ boot().catch(fail);
       let tt; try{ tt=JSON.parse(el.dataset.tt); }catch(e){ return; }
       const d=el.dataset.date; const list=tt[kind(d)]||tt.wd||[]; const line=el.dataset.line||'버스';
       const lbl={wd:'평일',sa:'토요일',ho:'일·공휴일'}[kind(d)];
-      if(d!==today){ el.innerHTML=`<span class="dim">${lbl} 시각표 · ${line}</span> ${list.map(x=>`<b>${x}</b>`).join(' · ')}`; return; }
+      if(d!==today){ el.innerHTML=`<span class="dim">${lbl} 시각표</span>  ${list.map(x=>`<b>${x}</b>`).join(' · ')}`; return; }
       const next=list.map(x=>[x,hm(x)]).filter(p=>p[1]!=null&&p[1]>=cur);
-      if(!next.length){ el.innerHTML=`<span class="dim">${lbl} ${line} · 오늘 시각표 끝</span>`; return; }
+      if(!next.length){ el.innerHTML=`<span class="dim">${lbl} · 오늘 시각표 끝</span>`; return; }
       const [t0,m0]=next[0]; const diff=m0-cur;
       const more=next.slice(1,3).map(p=>p[0]).join(' · ');
-      el.innerHTML=`<span class="now">${line} <b>${diff<=0?'지금':diff>=120?Math.floor(diff/60)+'시간 '+(diff%60)+'분 후':diff+'분 후'}</b> ${t0}</span>${more?`<span class="dim"> · 다음 ${more}</span>`:''}<span class="dim src"> 시각표 기준</span>`;
+      el.innerHTML=`<span class="now"><b>${diff<=0?'지금':diff>=120?Math.floor(diff/60)+'시간 '+(diff%60)+'분 후':diff+'분 후'}</b> ${t0}</span>${more?`<span class="dim"> · 다음 ${more}</span>`:''}<span class="dim src"> 시각표 기준</span>`;
     });
   }
   tick(); setInterval(tick,30000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });
