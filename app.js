@@ -393,3 +393,16 @@ boot().catch(fail);
   tick(); setInterval(tick,30000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });
   const mo=new MutationObserver(()=>tick()); mo.observe(document.getElementById('main')||document.body,{childList:true,subtree:false});
 })();
+
+// 가로 스와이프 → 이전/다음 날 (일정 탭에서만 · 진행바/지도 위에서는 무시)
+(function(){
+  let sx=0,sy=0,st=0,ok=false;
+  function goDay(delta){
+    if(view!=='days'||!TRIP) return;
+    const i=TRIP.days.findIndex(d=>d.id===cur); const j=i+delta; if(j<0||j>=TRIP.days.length) return;
+    cur=TRIP.days[j].id; LS.set('trip.day.'+TRIP.id,cur); window.__forceTop=true; renderTrip();
+    window.scrollTo(0,0); requestAnimationFrame(()=>window.scrollTo(0,0)); setTimeout(()=>{window.scrollTo(0,0);window.__forceTop=false;},80);
+  }
+  document.addEventListener('touchstart',e=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); ok=!e.target.closest('.pbar,.cv,iframe,.days,#bar,.swap'); },{passive:true});
+  document.addEventListener('touchend',e=>{ if(!ok) return; const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy; if(Date.now()-st>700) return; if(Math.abs(dx)<70||Math.abs(dy)>Math.abs(dx)*0.6) return; goDay(dx<0?1:-1); },{passive:true});
+})();
