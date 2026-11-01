@@ -195,7 +195,7 @@ function rowHTML(s,k,n,day){ day=day||{};
   if(s.type==='ride'){
     const meta=[s.kind||tn,s.stops?esc(s.stops):'',s.dur?esc(s.dur):'',s.pay?esc(s.pay):(s.fare?esc(s.fare):'')].filter(Boolean).join(' · ');
     head=`${s.onName?`<div class="node on">${KO(s.onName)}${s.onSub?`<em>${esc(s.onSub)}</em>`:''}</div>`:''}
-      <div class="bl"><span class="badge">${esc(s.line||tn)}</span>${s.tt?'':`<span class="sub">${meta}</span>`}${tm}</div>${s.tt?ttHTML:''}`;
+      <div class="bl"><span class="badge">${esc(s.line||tn)}</span><span class="sub">${s.tt?[s.stops?esc(s.stops):'',s.dur?esc(s.dur):''].filter(Boolean).join(' · '):meta}</span>${tm}</div>${s.tt?ttHTML:''}`;
     const kv=(lb,v)=>v?`<div class="kv2"><span class="lb">${lb}</span><span class="vl">${mdfmt(v)}</span></div>`:'';
     body=`<div class="kvs">${kv('승강장',s.plat)}${kv('참고',s.see)}</div>`; afterHTML=s.after?`<div class="kvs after">${kv('내려서',s.after)}</div>`:'';
   } else if(s.type==='walk'){
