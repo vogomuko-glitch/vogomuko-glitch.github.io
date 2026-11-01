@@ -210,7 +210,7 @@ function rowHTML(s,k,n,day){ day=day||{};
   let img='';
   if(CAN_EMBED&&s.v){ const useMap=s.v.map===true; img=`<div class="cv ${useMap?'ismap':''}"><div class="ph">${useMap?'지도':'로드뷰'}</div><iframe title="장면" data-src="${useMap?mapurl(s.v.q||(s.v.lat+','+s.v.lng)):svurl(s.v.lat,s.v.lng,s.v.h||0)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span class="cap">${esc(s.v.cap||'')}</span><button class="swap" data-lat="${s.v.lat}" data-lng="${s.v.lng}" data-h="${s.v.h||0}" data-map="${useMap?1:0}">${ms(useMap?'streetview':'map','s')}${useMap?'로드뷰':'지도'}</button></div>`; }
   const links=[];
-  if(s.type==='ride'||s.type==='walk'||s.type==='taxi'){ links.push(`<a class="live" target="_blank" rel="noopener" href="${gdir(s.q1||(s.onName||''),s.q2||(s.offName||s.q||''),s.type==='taxi'?'driving':s.type==='walk'?'walking':'transit')}">${ms('directions','s')}${s.type==='ride'?'실시간 도착':'구글맵 길찾기'}</a>`); }
+  if(s.type==='ride'||s.type==='walk'||s.type==='taxi'){ links.push(`<a class="live" target="_blank" rel="noopener" href="${gdir(s.q1||(s.onName||''),s.q2||(s.offName||s.q||''),s.type==='taxi'?'driving':s.type==='walk'?'walking':'transit')}">${ms('directions','s')}${s.type==='ride'?'실시간 도착':(()=>{const nx=(day.steps||[]).slice(k+1).find(x=>x.place);return nx?'→ '+esc(nx.place.replace(/^[①②③]\s*/,''))+' 가는 길':'구글맵 길찾기';})()}</a>`); }
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
   (s.links||[]).forEach(l=>links.push(`<a target="_blank" rel="noopener" href="${esc(l[1])}">${ms(l[2]||'link','s')}${esc(l[0])}</a>`));
