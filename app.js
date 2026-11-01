@@ -190,14 +190,14 @@ function rowHTML(s,k,n,day){ day=day||{};
   let [tn,ti]=stepLabel(s); if(MODEICON[s.mode]) ti=MODEICON[s.mode]; const sayItem=s.say!=null?TRIP.phrases[s.say-1]:null;
   const P=(TRIP.places||{})[s.pid];
   const tm=(s.t&&!s.place)?`<span class="tm num">${esc(s.t)}</span>`:'';
-  let head='', body='';
+  let head='', body='', afterHTML='';
   const ttHTML=s.tt?`<div class="tt" data-tt='${JSON.stringify(s.tt).replace(/'/g,"&#39;")}' data-date="${esc(day.id?'2026-'+day.id.slice(1,3)+'-'+day.id.slice(3,5):'')}" data-line="${esc(s.line||'')}"></div>`:'';
   if(s.type==='ride'){
     const meta=[s.kind||tn,s.stops?esc(s.stops):'',s.dur?esc(s.dur):'',s.pay?esc(s.pay):(s.fare?esc(s.fare):'')].filter(Boolean).join(' · ');
     head=`${s.onName?`<div class="node on">${KO(s.onName)}${s.onSub?`<em>${esc(s.onSub)}</em>`:''}</div>`:''}
       <div class="bl"><span class="badge">${esc(s.line||tn)}</span>${s.tt?'':`<span class="sub">${meta}</span>`}${tm}</div>${s.tt?ttHTML:''}`;
     const kv=(lb,v)=>v?`<div class="kv2"><span class="lb">${lb}</span><span class="vl">${mdfmt(v)}</span></div>`:'';
-    body=`<div class="kvs">${kv('승강장',s.plat)}${kv('내려서',s.after)}${kv('참고',s.see)}</div>`;
+    body=`<div class="kvs">${kv('승강장',s.plat)}${kv('참고',s.see)}</div>`; afterHTML=s.after?`<div class="kvs after">${kv('내려서',s.after)}</div>`:'';
   } else if(s.type==='walk'){
     head=`<div class="hl"><b>도보${s.dur?' '+esc(s.dur):''}</b>${tm}</div>`;
   } else if(s.type==='taxi'){
@@ -222,7 +222,7 @@ function rowHTML(s,k,n,day){ day=day||{};
     ${img}
     ${s.qr?`<div class="qr"><img src="${esc(s.qr)}" alt="입장 QR"><span>${esc(s.qrcap||"입장 QR · 화면 밝기 최대")}</span></div>`:''}
     ${links.length?`<div class="plinks">${links.join('')}</div>`:''}
-    ${off}
+    ${off}${afterHTML}
   </div></div>`;
 }
 function renderCards(day){
