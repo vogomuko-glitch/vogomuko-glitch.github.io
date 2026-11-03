@@ -197,7 +197,7 @@ function rowHTML(s,k,n,day){ day=day||{};
     head=`${s.onName?`<div class="node on">${KO(s.onName)}${s.onSub?`<em>${esc(s.onSub)}</em>`:''}</div>`:''}
       <div class="bl"><span class="badge">${esc(s.line||tn)}</span><span class="sub">${s.tt?[s.stops?esc(s.stops):'',s.dur?esc(s.dur):''].filter(Boolean).join(' · '):meta}</span>${tm}</div>${s.tt?ttHTML:''}`;
     const kv=(lb,v)=>v?`<div class="kv2"><span class="lb">${lb}</span><span class="vl">${mdfmt(v)}</span></div>`:'';
-    body=`<div class="kvs">${kv('승강장',s.plat)}${kv('참고',s.see)}</div>`; afterHTML=s.after?`<div class="kvs after">${kv('내려서',s.after)}</div>`:'';
+    body=`<div class="kvs">${kv('타는 곳',s.plat)}${kv('참고',s.see)}</div>`; afterHTML=s.after?`<div class="kvs after">${kv('내려서',s.after)}</div>`:'';
   } else if(s.type==='walk'){
     head=`<div class="hl"><b>도보${s.dur?' '+esc(s.dur):''}</b>${tm}</div>`;
   } else if(s.type==='taxi'){
@@ -214,7 +214,7 @@ function rowHTML(s,k,n,day){ day=day||{};
   if(P&&P.ig) links.push(`<a target="_blank" rel="noopener" href="https://www.instagram.com/${esc(P.ig)}/">${ms('photo_camera','s')}인스타</a>`);
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
   (s.links||[]).forEach(l=>links.push(`<a target="_blank" rel="noopener" href="${esc(l[1])}">${ms(l[2]||'link','s')}${esc(l[0])}</a>`));
-  const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}${s.offSub?`<em>${esc(s.offSub)}</em>`:''}<span class="lbl">하차</span></div>`:'';
+  const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}${s.offSub?`<em>${esc(s.offSub)}</em>`:''}<span class="lbl">내리는 곳</span></div>`:'';
   return `<div class="row m-${s.mode||'stay'} ${off?'has-off':''}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
     ${head}${intro}
     ${body}${bul}
