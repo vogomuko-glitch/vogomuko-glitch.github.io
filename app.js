@@ -215,7 +215,7 @@ function rowHTML(s,k,n,day){ day=day||{};
   if(P&&P.web) links.push(`<a target="_blank" rel="noopener" href="${esc(P.web)}">${ms('language','s')}홈페이지</a>`);
   (s.links||[]).forEach(l=>links.push(`<a target="_blank" rel="noopener" href="${esc(l[1])}">${ms(l[2]||'link','s')}${esc(l[0])}</a>`));
   const off=s.type==='ride'&&s.offName?`<div class="node off">${KO(s.offName)}${s.offSub?`<em>${esc(s.offSub)}</em>`:''}<span class="lbl">내리는 곳</span></div>`:'';
-  return `<div class="row m-${s.mode||'stay'} ${off?'has-off':''}" id="s${k}" data-k="${k}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
+  return `<div class="row m-${s.mode||'stay'} ${off?'has-off':''}" id="s${k}" data-k="${k}" data-t="${esc(s.t||'')}" data-date="${day.id?'2026-'+day.id.slice(1,3)+'-'+day.id.slice(3,5):''}"><div class="lc"><span class="ic">${ms(ti)}</span><i class="rl"></i></div><div class="rbd">
     ${head}${intro}
     ${body}${bul}
     ${sayItem?`<button class="say" data-say="${s.say-1}">${ms('translate','s')}<b>${esc(sayItem[1])}</b></button>`:''}
@@ -377,9 +377,15 @@ boot().catch(fail);
   const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x);return m?+m[1]*60+ +m[2]:null;};
   const pad=n=>String(n).padStart(2,'0');
   function fitOff(){ document.querySelectorAll('.node.off').forEach(n=>{ const l=n.querySelector('.lbl'); if(!l) return; l.style.display=''; if(n.offsetHeight>34) l.style.display='none'; }); }
+  function markNow(today,cur){
+    const rows=[...document.querySelectorAll('.row[data-t]')]; let hit=null;
+    rows.forEach(r=>{ r.classList.remove('now-here'); if(r.dataset.date!==today) return; const m=hm(r.dataset.t); if(m!=null&&m<=cur) hit=r; });
+    if(hit) hit.classList.add('now-here');
+  }
   function tick(){
     fitOff();
     const now=new Date(); const today=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate()); const cur=now.getHours()*60+now.getMinutes();
+    markNow(today,cur);
     document.querySelectorAll('.tt').forEach(el=>{
       let tt; try{ tt=JSON.parse(el.dataset.tt); }catch(e){ return; }
       const d=el.dataset.date; const list=tt[kind(d)]||tt.wd||[]; const line=el.dataset.line||'버스';

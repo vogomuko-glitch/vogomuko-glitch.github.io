@@ -643,3 +643,7 @@ html,body{overflow-x:hidden;max-width:100%}
 
 .tt{margin:2px 0 4px;font-size:15px;line-height:1.4}.tt .src{font-size:11px;margin-left:6px}.tt .dim{font-size:13px}
 .kvs.after{margin-top:4px;padding-left:0}
+
+.row.now-here .lc .ic{position:relative;box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--t1)}
+.row.now-here .lc .ic::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--t1);animation:nowpulse 1.6s ease-out infinite}
+@keyframes nowpulse{0%{transform:scale(.8);opacity:.9}100%{transform:scale(1.9);opacity:0}}
