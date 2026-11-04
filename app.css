@@ -644,14 +644,12 @@ html,body{overflow-x:hidden;max-width:100%}
 .tt{margin:2px 0 4px;font-size:15px;line-height:1.4}.tt .src{font-size:11px;margin-left:6px}.tt .dim{font-size:13px}
 .kvs.after{margin-top:4px;padding-left:0}
 
-/* 지금 여기: 아이콘 색 반투명 원 3개 면 파동 + 선 따라 내려가는 점 */
-.row.now-here .lc{position:relative}
-.row.now-here .lc .ic{position:relative;overflow:visible}
-.row.now-here .lc .ic::before,.row.now-here .lc .ic::after,.row.now-here .lc::after{content:"";position:absolute;left:50%;top:14px;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:var(--mc,var(--t1));opacity:0;pointer-events:none;z-index:0;animation:nowwave 2.4s ease-out infinite}
-.row.now-here .lc .ic::before{left:50%;top:50%;margin:-14px 0 0 -14px}
-.row.now-here .lc .ic::after{left:50%;top:50%;margin:-14px 0 0 -14px;animation-delay:.8s}
-.row.now-here .lc::after{animation-delay:1.6s}
-@keyframes nowwave{0%{transform:scale(1);opacity:.35}100%{transform:scale(1.7);opacity:0}}
+/* 지금 여기: 아이콘 색 반투명 원 3개 면 파동 (아이콘 정중앙 기준) */
+.row.now-here .lc .ic{position:relative;overflow:visible;animation:nowshadow 2.4s ease-out infinite 1.6s}
+.row.now-here .lc .ic::before,.row.now-here .lc .ic::after{content:"";position:absolute;left:50%;top:50%;width:100%;height:100%;border-radius:50%;background:var(--mc,var(--t1));opacity:0;pointer-events:none;z-index:-1;animation:nowwave 2.4s ease-out infinite}
+.row.now-here .lc .ic::after{animation-delay:.8s}
+@keyframes nowwave{0%{transform:translate(-50%,-50%) scale(1);opacity:.35}100%{transform:translate(-50%,-50%) scale(1.7);opacity:0}}
+@keyframes nowshadow{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--mc,var(--t1)) 35%,transparent)}100%{box-shadow:0 0 0 10px color-mix(in srgb,var(--mc,var(--t1)) 0%,transparent)}}
 .row.now-here .lc .rl{position:relative;overflow:visible}
 .row.now-here .lc .rl::after{content:"";position:absolute;left:-1.5px;top:0;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--mc,var(--t1));box-shadow:0 0 0 3px var(--bg);animation:nowmove 3s ease-in-out infinite}
 @keyframes nowmove{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:calc(100% - 8px);opacity:0}}
