@@ -423,7 +423,7 @@ boot().catch(fail);
   function paint(){
     const el=document.getElementById('live'); if(!el) return;
     const btn=`<button class="lbtn" id="livebtn">${isMe()?'내 위치 공유 끄기':'내 위치 공유 켜기'}</button>`;
-    if(!last){ el.hidden=!isMe(); el.innerHTML=btn; }
+    if(!last){ el.hidden=false; if(!el.querySelector('#livebtn')) el.innerHTML=btn; }
     else { el.hidden=false; const src='https://maps.google.com/maps?q='+last.lat+','+last.lng+'&z=15&hl=ko&output=embed'; const old=el.querySelector('iframe');
       if(!old) el.innerHTML=`<div class="lmap"><iframe title="지금 위치" src="${src}" referrerpolicy="no-referrer-when-downgrade"></iframe></div>${btn}`;
       else if(old.getAttribute('src')!==src) old.setAttribute('src',src); }
