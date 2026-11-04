@@ -376,7 +376,9 @@ boot().catch(fail);
   const kind=d=>{ if(!d) return 'wd'; if(HOL.includes(d)) return 'ho'; const w=new Date(d+'T00:00:00').getDay(); return w===0?'ho':w===6?'sa':'wd'; };
   const hm=x=>{const m=/(\d{1,2}):(\d{2})/.exec(x);return m?+m[1]*60+ +m[2]:null;};
   const pad=n=>String(n).padStart(2,'0');
+  function fitOff(){ document.querySelectorAll('.node.off').forEach(n=>{ const l=n.querySelector('.lbl'); if(!l) return; l.style.display=''; if(n.offsetHeight>34) l.style.display='none'; }); }
   function tick(){
+    fitOff();
     const now=new Date(); const today=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate()); const cur=now.getHours()*60+now.getMinutes();
     document.querySelectorAll('.tt').forEach(el=>{
       let tt; try{ tt=JSON.parse(el.dataset.tt); }catch(e){ return; }
@@ -384,14 +386,14 @@ boot().catch(fail);
       const lbl={wd:'평일',sa:'토요일',ho:'일·공휴일'}[kind(d)];
       if(d!==today){ el.innerHTML=`<span class="dim">${lbl} 시각표</span>  ${list.map(x=>`<b>${x}</b>`).join(' · ')}`; return; }
       const next=list.map(x=>[x,hm(x)]).filter(p=>p[1]!=null&&p[1]>=cur);
-      if(!next.length){ el.innerHTML=`<span class="dim">${lbl} · 이 시간대 시각표 없음 → 전광판 확인</span>`; return; }
+      if(!next.length){ el.innerHTML=`<span class="dim">${lbl} · 이 시간대 시각표 없음 → 열차 도착 안내 화면 확인</span>`; return; }
       const [t0,m0]=next[0]; const diff=m0-cur;
       const more=next.slice(1,3).map(p=>p[0]).join(' · ');
       el.innerHTML=`<span class="now"><b>${diff<=0?'지금':diff>=120?Math.floor(diff/60)+'시간 '+(diff%60)+'분 후':diff+'분 후'}</b> ${t0}</span>${more?`<span class="dim"> · 다음 ${more}</span>`:''}<span class="dim src" style="display:inline"> ${tt.src||'시각표 기준'}</span>`;
     });
   }
   tick(); setInterval(tick,30000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });
-  const mo=new MutationObserver(()=>tick()); mo.observe(document.getElementById('main')||document.body,{childList:true,subtree:false});
+  const mo=new MutationObserver(()=>tick()); mo.observe(document.getElementById('main')||document.body,{childList:true,subtree:true}); window.addEventListener('resize',fitOff);
 })();
 
 // 가로 스와이프 → 이전/다음 날 (일정 탭에서만 · 진행바/지도 위에서는 무시)
