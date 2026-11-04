@@ -393,7 +393,7 @@ boot().catch(fail);
     });
   }
   tick(); setInterval(tick,30000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });
-  const mo=new MutationObserver(()=>tick()); mo.observe(document.getElementById('main')||document.body,{childList:true,subtree:true}); window.addEventListener('resize',fitOff);
+  const mo=new MutationObserver(()=>tick()); mo.observe(document.getElementById('main')||document.body,{childList:true,subtree:false}); window.addEventListener('resize',fitOff);
 })();
 
 // 가로 스와이프 → 이전/다음 날 (일정 탭에서만 · 진행바/지도 위에서는 무시)
