@@ -295,7 +295,7 @@ function renderCover(){
       <div class="jfoot"><span></span><button class="jgo" data-id="${d.id}">${esc(d.d)} 일정 보기 ↗</button></div></div></div></article>`; };
   const ex=c.extra?`<article class="jday" style="--color:${esc(c.extra.color)};--text:${esc(c.extra.text||'#fff')}"><div class="jt static"><span class="jd">${esc(c.extra.date)} <span class="jw">${esc(c.extra.week)}</span></span><span class="jcity">${esc(c.extra.city)}</span><span></span></div></article>`:'';
   $('#main').innerHTML=`<section class="journal"><header class="mast"><span>${esc((c.masthead||[])[0]||'')}</span><span>${esc((c.masthead||[])[1]||'')}</span></header>
-    <div class="hero"><h1 class="ct">${esc(c.title||TRIP.title)}</h1></div><div id="live" class="live" hidden></div><div class="jspace"></div>
+    <div class="hero"><h1 class="ct">${esc(c.title||TRIP.title)}</h1></div><div class="jspace"></div>
     <div class="jdays">${TRIP.days.map(pill).join('')}${ex}</div>
     </section>`;
   const fitCover=()=>{ const j=$('.journal'); if(!j) return; const top=$('#top').offsetHeight, bar=$('#bar').offsetHeight; const mainPad=parseFloat(getComputedStyle($('#main')).paddingBottom)||0; j.style.minHeight=Math.max(0,window.innerHeight-top-bar-mainPad)+'px'; };
@@ -413,36 +413,4 @@ boot().catch(fail);
   }
   document.addEventListener('touchstart',e=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); ok=!e.target.closest('.pbar,.cv,iframe,.days,#bar,.swap'); },{passive:true});
   document.addEventListener('touchend',e=>{ if(!ok) return; const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy; if(Date.now()-st>700) return; if(Math.abs(dx)<70||Math.abs(dy)>Math.abs(dx)*0.6) return; goDay(dx<0?1:-1); },{passive:true});
-})();
-
-// ── 실시간 위치 공유 (ntfy 중계) ──
-(function(){
-  const TOPIC='kyoto-minji-ac905bbc6f128dd6', URL='https://ntfy.sh/'+TOPIC;
-  const isMe=()=>localStorage.getItem('live.me')==='1';
-  let last=null;
-  function paint(){
-    const el=document.getElementById('live'); if(!el) return;
-    const btn=`<button class="lbtn" id="livebtn">${isMe()?'내 위치 공유 끄기':'내 위치 공유 켜기'}</button>`;
-    if(!last){ el.hidden=false; if(!el.querySelector('#livebtn')) el.innerHTML=btn; }
-    else { el.hidden=false; const src='https://maps.google.com/maps?q='+last.lat+','+last.lng+'&z=15&hl=ko&output=embed'; const old=el.querySelector('iframe');
-      if(!old) el.innerHTML=`<div class="lmap"><iframe title="지금 위치" src="${src}" referrerpolicy="no-referrer-when-downgrade"></iframe></div>${btn}`;
-      else if(old.getAttribute('src')!==src) old.setAttribute('src',src); }
-    const b=document.getElementById('livebtn'); if(b) b.onclick=()=>{ localStorage.setItem('live.me',isMe()?'0':'1'); el.querySelector('iframe')||(el.innerHTML=''); paint(); if(isMe()) push(); };
-  }
-  async function pull(){
-    try{ const r=await fetch(URL+'/json?poll=1&since=12h',{cache:'no-store'}); const t=await r.text(); const lines=t.trim().split('\n').filter(Boolean);
-      for(let i=lines.length-1;i>=0;i--){ const m=JSON.parse(lines[i]); const p=/^(-?\d+\.\d+),(-?\d+\.\d+)$/.exec(m.message||''); if(p){ last={lat:+p[1],lng:+p[2]}; break; } }
-    }catch(e){}
-    paint();
-  }
-  function push(){
-    if(!isMe()||!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(pos=>{ const lat=pos.coords.latitude.toFixed(5), lng=pos.coords.longitude.toFixed(5);
-      last={lat:+lat,lng:+lng}; paint();
-      fetch(URL,{method:'POST',body:lat+','+lng,headers:{'Title':'loc'}}).catch(()=>{});
-    },()=>{},{enableHighAccuracy:true,maximumAge:30000,timeout:15000});
-  }
-  pull(); setInterval(pull,60000); setInterval(push,60000);
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ pull(); push(); } });
-  new MutationObserver(()=>{ if(document.getElementById('live')&&!document.getElementById('live').dataset.p){ document.getElementById('live').dataset.p=1; paint(); } }).observe(document.getElementById('main')||document.body,{childList:true});
 })();
