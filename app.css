@@ -654,3 +654,9 @@ html,body{overflow-x:hidden;max-width:100%}
 .row.now-here .lc .rl::after{content:"";position:absolute;left:-1.5px;top:0;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--mc,var(--t1));box-shadow:0 0 0 3px var(--bg);animation:nowmove 3s ease-in-out infinite}
 @keyframes nowmove{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:calc(100% - 8px);opacity:0}}
 .row.m-walk.now-here .lc .rl::after{left:-1px}.row.m-stay.now-here .lc .rl::after{left:-.5px}
+
+/* 헤더 줄: 시각이 첫 줄 오른쪽에 고정, 긴 설명은 같은 줄 안에서 줄바꿈 */
+.hl,.bl{flex-wrap:nowrap;align-items:flex-start}
+.hl .sub,.bl .sub{flex:1 1 0;min-width:0}
+.hl .tm,.bl .tm{flex:none;margin-left:auto;white-space:nowrap}
+.hl b,.bl .badge{flex:none}
